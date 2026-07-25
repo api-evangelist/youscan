@@ -1,0 +1,286 @@
+openapi: 3.1.0
+info:
+  title: YouScan Data Import History API
+  version: '1.0'
+  contact:
+    name: YouScan Support
+    url: https://youscan.io
+  license:
+    name: Proprietary
+    url: https://youscan.io/terms-of-service
+  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+servers:
+- url: https://api.youscan.io/api/external
+security:
+- ApiKeyHeader: []
+- ApiKeyQuery: []
+tags:
+- name: History
+  description: 'Manage historical data collection for a topic.
+
+
+    Starting a collection can return `400` if a collection is already running, if the date
+
+    range is invalid, or if the requested depth exceeds your plan''s history limit.
+
+    '
+paths:
+  /topics/{topicId}/history:
+    get:
+      tags:
+      - History
+      operationId: getHistoryDetails
+      summary: History collection details
+      description: Get the status and progress of the historical data collection job for the topic.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: History collection job details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryJobDetails'
+        '204':
+          description: No history collection job exists for the topic.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+      - History
+      operationId: collectHistory
+      summary: Start history collection
+      description: Start collecting historical mentions for the topic for the given date range.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - from
+              - to
+              properties:
+                from:
+                  type: string
+                  format: date
+                  description: ISO formatted date from.
+                to:
+                  type: string
+                  format: date
+                  description: ISO formatted date to.
+            example:
+              from: '2025-01-01'
+              to: '2025-02-01'
+      responses:
+        '200':
+          description: History collection started.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/history/stop:
+    post:
+      tags:
+      - History
+      operationId: stopHistoryCollection
+      summary: Stop history collection
+      description: Stop the running historical data collection job.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: History collection stopped.
+        '400':
+          description: No active history collection job to stop.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Can't find collecting job for the topic
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  responses:
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    Unauthorized:
+      description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+  schemas:
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    HistoryJobDetails:
+      type: object
+      properties:
+        topicId:
+          type: integer
+          description: Topic ID.
+        status:
+          type: string
+          enum:
+          - collecting
+          - failed
+          - failedComplexQuery
+          - completed
+          - aborted
+          description: Job status.
+        started:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Date and time when the job started.
+        ended:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Date and time when the job finished.
+        from:
+          type: string
+          format: date-time
+          description: Date from which data is collected.
+        to:
+          type: string
+          format: date-time
+          description: Date until which data is collected.
+        query:
+          type: string
+          description: Search query used for historical data collection.
+        processedTo:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Date until which data is already collected.
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Percentage completed.
+        collected:
+          type: integer
+          description: Number of mentions processed.
+        saved:
+          type: integer
+          description: Number of mentions saved to the topic.
+        duplicates:
+          type: integer
+          description: Number of duplicate mentions skipped.
+        skipped:
+          type: integer
+          description: Number of mentions skipped.
+        invalid:
+          type: integer
+          description: Number of invalid mentions.
+        lastError:
+          type:
+          - string
+          - 'null'
+          description: Last error message, if the job failed.
+      example:
+        topicId: 123
+        status: collecting
+        started: '2021-02-01T13:01:00Z'
+        from: '2021-01-01T00:00:00Z'
+        to: '2021-02-01T00:00:00Z'
+        query: Tesla or SpaceX
+        processedTo: '2021-01-15T00:00:00Z'
+        progress: 15
+        collected: 1024
+        saved: 900
+        duplicates: 100
+        skipped: 20
+        invalid: 4
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication. The recommended way to authenticate requests.
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+      description: API key as a query parameter. For testing purposes only.

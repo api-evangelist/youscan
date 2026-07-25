@@ -1,0 +1,163 @@
+openapi: 3.1.0
+info:
+  title: YouScan Data Import Spaces API
+  version: '1.0'
+  contact:
+    name: YouScan Support
+    url: https://youscan.io
+  license:
+    name: Proprietary
+    url: https://youscan.io/terms-of-service
+  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+servers:
+- url: https://api.youscan.io/api/external
+security:
+- ApiKeyHeader: []
+- ApiKeyQuery: []
+tags:
+- name: Spaces
+  description: Spaces available to the authenticated user and categories configured in them.
+paths:
+  /spaces:
+    get:
+      tags:
+      - Spaces
+      operationId: listSpaces
+      summary: List spaces
+      description: List spaces available to the authenticated user.
+      responses:
+        '200':
+          description: Spaces available to the user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  spaces:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+              example:
+                spaces:
+                - id: 10
+                  name: Main
+                - id: 20
+                  name: Support
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /spaces/{spaceId}/categories:
+    get:
+      tags:
+      - Spaces
+      operationId: listSpaceCategories
+      summary: List categories
+      description: List categories configured in the specified space.
+      parameters:
+      - name: spaceId
+        in: path
+        required: true
+        description: ID of the Space.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Categories configured in the space.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+              example:
+                categories:
+                - id: 1
+                  name: Brands
+                  subCategories:
+                  - id: 11
+                    name: Boss
+                  - id: 12
+                    name: Nike
+                - id: 2
+                  name: Regions
+                  subCategories:
+                  - id: 21
+                    name: EMEA
+        '404':
+          $ref: '#/components/responses/SpaceNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  schemas:
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
+    Space:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Space ID.
+        name:
+          type: string
+          description: Space name.
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Category ID.
+        name:
+          type: string
+          description: Category name.
+        subCategories:
+          type: array
+          description: Configured (or, in mention responses, assigned) subcategories.
+          items:
+            $ref: '#/components/schemas/SubCategory'
+  responses:
+    SpaceNotFound:
+      description: Space not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            errorCode: RESOURCE_NOT_FOUND
+            message: Space not found
+            resourceType: Space
+    Unauthorized:
+      description: The API key is missing or invalid.
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication. The recommended way to authenticate requests.
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+      description: API key as a query parameter. For testing purposes only.

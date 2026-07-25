@@ -1,0 +1,529 @@
+openapi: 3.1.0
+info:
+  title: YouScan Data Import Topics API
+  version: '1.0'
+  contact:
+    name: YouScan Support
+    url: https://youscan.io
+  license:
+    name: Proprietary
+    url: https://youscan.io/terms-of-service
+  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+servers:
+- url: https://api.youscan.io/api/external
+security:
+- ApiKeyHeader: []
+- ApiKeyQuery: []
+tags:
+- name: Topics
+  description: 'Create and manage topics — the monitoring entities that collect mentions matching your queries.
+
+
+    ### Topic query structure
+
+
+    A topic query consists of a `textQuery` and/or `viQuery` (at least one is required) plus an optional `filter`.
+
+
+    For all topic query filters, the following field names are supported:
+
+
+    - `country`: ISO2 country code (e.g. `country=US`, `country=UA`)
+
+    - `countryGroup`: Europe, Asia, NorthAmerica, CentralAmerica, TheCaribbean, SouthAmerica, Africa, Oceania (e.g. `countryGroup=Europe`)
+
+    - `language`: ISO639-2 language code (e.g. `language=ENG`, `language=UKR`)
+
+    - `source`: domain format (e.g. `source=instagram.com`)
+
+    - `sourceType`: social, messenger, reviews, news, blog, forum (e.g. `sourceType=social`)
+
+    - `postType`: post, repost, extendedRepost, comment (e.g. `postType=post`)
+
+    - `contentType`: text, link, image, video, poll, subtitles, sticker (e.g. `contentType=image`)
+
+    - `authorAge`: numeric value (e.g. `authorAge=18`)
+
+    - `authorSubscribers`: numeric value (e.g. `authorSubscribers=1000`)
+
+    - `gender`: `male` or `female` (e.g. `gender=male`)
+
+
+    Supported Visual Insights (VI) query values (used inside `viQuery`):
+
+
+    - `logo`: detect specific brand logos (e.g. `logo:"nike"`)
+
+    - `image.object`: find specific objects (e.g. `image.object:"car"`)
+
+    - `image.activity`: find activities (e.g. `image.activity:"cooking"`)
+
+    - `image.person`: find people types (e.g. `image.person:"athlete"`)
+
+    - `image.scene`: find settings (e.g. `image.scene:"beach"`)
+
+    - `image.type`: filter by image type (e.g. `image.type:"PHOTO"`)
+
+    - `image.subtype`: filter by image subtype (e.g. `image.subtype:"selfie"`)
+
+    - `text`: search mention text (e.g. `text:"sale"`)
+
+
+    Supported operations for each filter:
+
+
+    - `oneOf`: field value must match one of the specified values. Applicable to most fields.
+
+    - `notOneOf`: field value must not match any of the specified values. Applicable to most fields.
+
+    - `greaterOrEqual`: field value must be greater than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).
+
+    - `lessOrEqual`: field value must be less than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).
+
+
+    Each filter object must specify:
+
+    - `fieldName`: The field to filter on (see the list above)
+
+    - `op`: The operation to perform (see the list above)
+
+    - `value`: JSON-encoded array of values (e.g. `["ua"]`)
+
+    '
+paths:
+  /topics:
+    get:
+      tags:
+      - Topics
+      operationId: listTopics
+      summary: List topics
+      description: List all topics available in your account.
+      responses:
+        '200':
+          description: Topics available in the account.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  topics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TopicInfo'
+              example:
+                topics:
+                - id: 41541
+                  name: Coca-cola
+                - id: 41546
+                  name: Pepsi Cola
+                - id: 41550
+                  name: Fanta
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+      - Topics
+      operationId: createTopic
+      summary: Create topic
+      description: Creates a new topic for mention monitoring.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              - topicQuery
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 75
+                  description: Name of the topic (1-75 characters).
+                topicQuery:
+                  $ref: '#/components/schemas/TopicQuery'
+                sampling:
+                  type: number
+                  exclusiveMinimum: 0
+                  maximum: 1
+                  default: 1
+                  description: 'Sampling rate (0 < value ≤ 1). Allows you to monitor a fraction of all matching mentions. Requires a subscription plan with sampling support, otherwise the request is rejected with `400`. Optional (default value is 1 — full sample).
+
+                    '
+            example:
+              name: Topic Name
+              topicQuery:
+                textQuery: brand OR company
+                viQuery: logo:microsoft
+                filter:
+                  op: and
+                  filters:
+                  - fieldName: country
+                    op: notOneOf
+                    value: '["ua"]'
+              sampling: 0.5
+      responses:
+        '201':
+          description: Topic created.
+          headers:
+            Location:
+              description: URL of the created topic.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicInfo'
+              example:
+                id: 123
+                name: Topic Name
+                topicQuery:
+                  textQuery: brand OR company
+                  viQuery: logo:microsoft
+                sampling: 0.5
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '402':
+          $ref: '#/components/responses/HistoryLimitExceeded'
+        '403':
+          description: You don't have permission to create topics in the target space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: You don't have permission to create topics in this space
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/preview:
+    post:
+      tags:
+      - Topics
+      operationId: previewTopic
+      summary: Preview topic
+      description: 'Estimate the number of monthly mentions for a topic query before creating a topic. This helps you check if your query is within your plan limits and if sampling is available.
+
+        '
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - topicQuery
+              properties:
+                topicQuery:
+                  $ref: '#/components/schemas/TopicQuery'
+                sampling:
+                  type: number
+                  exclusiveMinimum: 0
+                  maximum: 1
+                  default: 1
+                  description: Sampling rate (0 < value ≤ 1). Optional (default value is 1 — full sample).
+            example:
+              topicQuery:
+                textQuery: brand OR company
+                viQuery: logo:microsoft
+                filter:
+                  op: and
+                  filters:
+                  - fieldName: country
+                    op: notOneOf
+                    value: '["ua"]'
+              sampling: 0.5
+      responses:
+        '200':
+          description: Estimation result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  monthlyCount:
+                    type: integer
+                    description: Estimated number of mentions per month for the query.
+                  monthlyLimit:
+                    type: integer
+                    description: Monthly mentions limit of your subscription plan.
+                  isWithinLimit:
+                    type: boolean
+                    description: Whether the estimated count fits into the plan limit.
+                  samplingAllowed:
+                    type: boolean
+                    description: Whether sampling is available in your subscription plan.
+                  sampling:
+                    type:
+                    - number
+                    - 'null'
+                    description: Sampling rate echoed from the request.
+              example:
+                monthlyCount: 12345
+                monthlyLimit: 20000
+                isWithinLimit: true
+                samplingAllowed: true
+                sampling: 0.5
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/query/edit:
+    post:
+      tags:
+      - Topics
+      operationId: updateTopicQuery
+      summary: Update topic query
+      description: Updates an existing topic's query parameters.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - topicQuery
+              properties:
+                topicQuery:
+                  $ref: '#/components/schemas/TopicQuery'
+            example:
+              topicQuery:
+                textQuery: updated brand OR company
+                viQuery: logo:microsoft
+                filter:
+                  op: and
+                  filters:
+                  - fieldName: country
+                    op: notOneOf
+                    value: '["ua"]'
+      responses:
+        '200':
+          description: Updated topic.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicInfo'
+              example:
+                id: 123
+                name: Topic Name
+                topicQuery:
+                  textQuery: updated brand OR company
+                  viQuery: logo:microsoft
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '402':
+          $ref: '#/components/responses/HistoryLimitExceeded'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}:
+    delete:
+      tags:
+      - Topics
+      operationId: deleteTopic
+      summary: Delete topic
+      description: Deletes a topic and all its associated data. This action is irreversible.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: Topic deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: boolean
+              example: true
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  responses:
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    Unauthorized:
+      description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+    HistoryLimitExceeded:
+      description: Too many mentions matching the query for your subscription plan.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            errorCode: HISTORY_LIMIT_EXCEEDED
+            message: Too many mentions matching query. Please refine your search query or ask support for help
+  schemas:
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    FilterItem:
+      type: object
+      required:
+      - fieldName
+      - op
+      - value
+      properties:
+        fieldName:
+          type: string
+          description: The field to filter on.
+          enum:
+          - country
+          - countryGroup
+          - language
+          - source
+          - sourceType
+          - postType
+          - contentType
+          - authorAge
+          - authorSubscribers
+          - gender
+        op:
+          type: string
+          description: The operation to perform.
+          enum:
+          - oneOf
+          - notOneOf
+          - greaterOrEqual
+          - lessOrEqual
+        value:
+          type: string
+          description: JSON-encoded array of values, e.g. `["ua"]`.
+      example:
+        fieldName: country
+        op: notOneOf
+        value: '["ua"]'
+    TopicQuery:
+      type: object
+      description: 'Topic query parameters. Either `textQuery` or `viQuery` must be set.
+
+        '
+      properties:
+        textQuery:
+          type:
+          - string
+          - 'null'
+          description: Text query using YouScan query syntax.
+        viQuery:
+          type:
+          - string
+          - 'null'
+          description: 'VI query using YouScan query syntax (requires VI subscription). Used to match mentions by logos, text, and objects on images.
+
+            '
+        filter:
+          oneOf:
+          - $ref: '#/components/schemas/CustomFilter'
+          - type: 'null'
+          description: Optional filter criteria (see the filter structure description in the Topics section).
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    CustomFilter:
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - and
+          - or
+          description: How the listed filters are combined.
+        filters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterItem'
+    TopicInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Topic ID.
+        name:
+          type: string
+          description: Topic name.
+        topicQuery:
+          $ref: '#/components/schemas/TopicQuery'
+        sampling:
+          type:
+          - number
+          - 'null'
+          description: Sampling rate, if sampling is enabled for the topic.
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication. The recommended way to authenticate requests.
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+      description: API key as a query parameter. For testing purposes only.

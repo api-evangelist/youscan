@@ -1,0 +1,388 @@
+openapi: 3.1.0
+info:
+  title: YouScan Data Import Webhook API
+  version: '1.0'
+  contact:
+    name: YouScan Support
+    url: https://youscan.io
+  license:
+    name: Proprietary
+    url: https://youscan.io/terms-of-service
+  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+servers:
+- url: https://api.youscan.io/api/external
+security:
+- ApiKeyHeader: []
+- ApiKeyQuery: []
+tags:
+- name: Webhook
+  description: 'Webhooks push new mentions to your own server in real time, so you don''t have to poll the
+
+    API. Every time a new mention is found and saved to a topic, YouScan sends an HTTP `POST`
+
+    with the mention payload to a URL you control.
+
+
+    ### Setup
+
+
+    Webhooks are configured in the YouScan UI — there is **no API to create them**. Open a
+
+    topic''s **Settings → Integrations**, click **Add** next to *Webhook*, and enter your
+
+    destination URL. Full guide:
+
+    [How to use webhook integration](https://help.youscan.io/en/articles/3371690-how-to-use-webhook-integration).
+
+
+    - Set up **per topic** — point several topics at the same URL, or add several webhooks to one topic.
+
+    - Mentions are sent **automatically** via rule-based alerts, and can also be sent **manually** from the mention stream.
+
+    - For a protected endpoint, put Basic Auth credentials in the URL: `https://user:password@example.com/callback`.
+
+
+    ### Your endpoint
+
+
+    Respond with any `2xx` status code within **4 minutes** to acknowledge receipt; any other
+
+    response — or a timeout — is treated as a failed delivery. Fields with `null` values are
+
+    omitted from the payload.
+
+
+    > Mentions from Reddit, Quora and some smaller sources are not delivered. Twitter mentions
+
+    > are restricted — text, URL and author details are removed.
+
+    '
+paths:
+  /your-webhook-endpoint:
+    post:
+      tags:
+      - Webhook
+      operationId: mentionFoundWebhook
+      summary: Mention found
+      security: []
+      servers:
+      - url: https://your-app.example
+        description: The HTTPS endpoint you register in the topic's Settings → Integrations.
+      description: 'Sent by YouScan to the URL you configured, every time a new mention is found and
+
+        saved to the topic. Fields with `null` values are omitted from the payload.
+
+        '
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookMention'
+            example:
+              topicId: 1
+              topicName: YouScan
+              themeId: 1
+              themeName: YouScan
+              mentionId: 241032672
+              url: https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/
+              published: '2021-08-09T14:13:03Z'
+              addedAt: '2021-08-09T16:04:59.9506137Z'
+              sourceName: youscan.io
+              title: Saas Advisor Named <b>YouScan</b> a Visual Analysis Category Winner in Martech-Challenges
+              text: The second year in a row, <b>YouScan</b> is named the Best Social Media Monitoring Software in the 2021 MarTech Breakthrough Awards.
+              imageUrl: https://api-site.youscan.io/assets/visual-analysis.png
+              author:
+                name: Elena Teselko
+                url: https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/
+                avatarUrl: https://assets.youscan.io/assets/main/0625ed74b3a8-512.jpeg
+              sentiment: positive
+              postType: post
+              resourceType: blog
+              spam: false
+              language: eng
+              country: ua
+              region: Kyiv
+              city: Kyiv
+              tags:
+              - Awards
+              contentTypes:
+              - text
+              - image
+              likes: 12
+              comments: 3
+              engagement: 15
+              potentialReach: 100
+              postId: blog-post-123
+              discussionId: blog-post-123
+      responses:
+        '200':
+          description: Return any 2xx status code to acknowledge receipt of the mention.
+        4XX:
+          description: 'YouScan treats any non-2xx response — or no response within 4 minutes — as a
+
+            failed delivery.
+
+            '
+components:
+  schemas:
+    WebhookMention:
+      type: object
+      required:
+      - topicId
+      - mentionId
+      - published
+      - postType
+      - resourceType
+      properties:
+        topicId:
+          type: integer
+          description: Topic ID.
+        topicName:
+          type: string
+          description: Topic name.
+        themeId:
+          type: integer
+          deprecated: true
+          description: Legacy duplicate of `topicId`.
+        themeName:
+          type: string
+          deprecated: true
+          description: Legacy duplicate of `topicName`.
+        mentionId:
+          type: integer
+          format: int64
+          description: Mention identifier.
+        sourceName:
+          type: string
+          description: Mention source (domain).
+        author:
+          $ref: '#/components/schemas/WebhookProfile'
+          description: Author info.
+        channel:
+          $ref: '#/components/schemas/WebhookProfile'
+          description: Publication place info.
+        title:
+          type: string
+          description: Mention title.
+        text:
+          type: string
+          description: Mention text.
+        url:
+          type: string
+          description: Direct URL to the mention.
+        published:
+          type: string
+          format: date-time
+          description: Date when the mention was published (ISO 8601 format).
+        addedAt:
+          type: string
+          format: date-time
+          description: Date when the mention was saved to the topic (ISO 8601 format).
+        sentiment:
+          $ref: '#/components/schemas/Sentiment'
+        imageUrl:
+          type: string
+          description: URL to the mention image.
+        language:
+          type: string
+          description: 3-letter ISO 639 language code.
+        postType:
+          $ref: '#/components/schemas/PostType'
+        resourceType:
+          type: string
+          enum:
+          - social
+          - blog
+          - forum
+          - messenger
+          - news
+          - reviews
+          - other
+          description: Source type.
+        spam:
+          type: boolean
+          description: Whether the mention is marked as spam.
+        rating:
+          type: number
+          description: Rating (for reviews).
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tag names.
+        postId:
+          type: string
+          description: External post ID.
+        parentPostId:
+          type: string
+          description: External ID of the parent post.
+        discussionId:
+          type: string
+          description: External ID of the root discussion.
+        likes:
+          type: integer
+        reposts:
+          type: integer
+        comments:
+          type: integer
+        engagement:
+          type: integer
+          description: Sum of likes, reposts and comments.
+        dislikes:
+          type: integer
+        views:
+          type: integer
+        impressions:
+          type: integer
+        reach:
+          type: integer
+        saves:
+          type: integer
+        reactions:
+          $ref: '#/components/schemas/Reactions'
+        contentTypes:
+          type: array
+          items:
+            type: string
+            enum:
+            - text
+            - link
+            - image
+            - video
+            - poll
+            - subtitles
+            - sticker
+        sourceFormat:
+          $ref: '#/components/schemas/SourceSpecificFormat'
+        country:
+          type: string
+          description: ISO alpha-2 country code.
+        region:
+          type: string
+        city:
+          type: string
+        potentialReach:
+          type: integer
+          description: Potential reach.
+        imageScenes:
+          type: array
+          items:
+            type: string
+          description: Scenes detected on the image. Requires the Visual Insights option.
+        imageObjects:
+          type: array
+          items:
+            type: string
+          description: Objects detected on the image. Requires the Visual Insights option.
+        imageColors:
+          type: array
+          items:
+            type: string
+          description: HEX color codes detected on the image. Requires the Visual Insights option.
+        imageActivities:
+          type: array
+          items:
+            type: string
+          description: Activities detected on the image. Requires the Visual Insights option.
+        imageBrands:
+          type: array
+          items:
+            type: string
+          description: Brands detected on the image. Requires the Visual Insights option.
+    Sentiment:
+      type: string
+      enum:
+      - positive
+      - neutral
+      - negative
+      - undefined
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+      - instagramReels
+      - instagramStories
+      - pinterestStoryPins
+      - youTubeShorts
+      - facebookReels
+      - facebookStories
+      - tikTokPhoto
+      - twitterNote
+      - youTubeLive
+      - facebookLive
+      - twitchLive
+      - twitterCommunityNote
+    Reactions:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of reactions.
+        angry:
+          type:
+          - integer
+          - 'null'
+        haha:
+          type:
+          - integer
+          - 'null'
+        love:
+          type:
+          - integer
+          - 'null'
+        sad:
+          type:
+          - integer
+          - 'null'
+        wow:
+          type:
+          - integer
+          - 'null'
+        care:
+          type:
+          - integer
+          - 'null'
+    PostType:
+      type: string
+      enum:
+      - post
+      - repost
+      - extendedRepost
+      - comment
+    WebhookProfile:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Link to the profile.
+        name:
+          type: string
+        nickname:
+          type: string
+        profileId:
+          type: string
+          description: Profile ID in the source system.
+        profileType:
+          type: string
+          description: Profile type, specific to the source.
+        avatarUrl:
+          type: string
+          description: Avatar image URL.
+        subscribers:
+          type: integer
+          description: Number of subscribers (followers, friends).
+        age:
+          type: integer
+          description: Author age. Sent only for accounts with the extended webhook feature enabled.
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication. The recommended way to authenticate requests.
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+      description: API key as a query parameter. For testing purposes only.

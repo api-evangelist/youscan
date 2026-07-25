@@ -1,0 +1,699 @@
+openapi: 3.1.0
+info:
+  title: YouScan Data Import API
+  version: '1.0'
+  contact:
+    name: YouScan Support
+    url: https://youscan.io
+  license:
+    name: Proprietary
+    url: https://youscan.io/terms-of-service
+  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+servers:
+- url: https://api.youscan.io/api/external
+security:
+- ApiKeyHeader: []
+- ApiKeyQuery: []
+tags:
+- name: Data Import
+  description: 'The Data Import API allows you to import mentions from external sources into YouScan topics.
+
+    This feature enables you to bring historical data or mentions from sources not natively
+
+    supported by YouScan.
+
+
+    **Beta Notice**: This API is currently in beta and may undergo minor changes.
+
+    '
+paths:
+  /topics/{topicId}/imports:
+    post:
+      tags:
+      - Data Import
+      operationId: createImport
+      summary: Create import
+      description: "Create a new data import job to import mentions into a topic.\n\nMaximum 100,000 mentions per import.\nIf items contain a large amount of data (such as lengthy text content), you may receive\na 413 (Content Too Large) error. In this case, try splitting your batch into smaller ones.\n\n**Each mention must have:**\n- A valid URL (required) — must be an absolute HTTP or HTTPS URL. If you want to import an item\n  without a URL, you should still create a fake unique-per-topic URL (https://mysite.com/1)\n- A published date (required) — cannot be empty\n- At least one content field: title, text, or imageUrl\n\n**Processing:**\n- Mentions are processed asynchronously after the import is created\n- Use the Get Import Status endpoint to track progress\n- Failed mentions can be retrieved using the Get Import Errors endpoint\n- Duplicate mentions (same URL) will be rejected with error code \"Duplicate\"\n"
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - mentions
+              properties:
+                name:
+                  type: string
+                  description: Name for this import batch.
+                mentions:
+                  type: array
+                  minItems: 1
+                  maxItems: 100000
+                  description: List of mentions to import.
+                  items:
+                    $ref: '#/components/schemas/ImportMention'
+            example:
+              name: Q4 2024 Customer Feedback
+              mentions:
+              - url: https://example.com/post/123
+                published: '2024-12-15T10:30:00Z'
+                text: Great product! I love using it every day.
+                title: Customer Review
+                postId: post-123
+                parentPostId: thread-456
+                discussionId: discussion-789
+                originId: origin-000
+                source: example.com
+                postType: Post
+                sourceType: Reviews
+                contentTypes:
+                - Text
+                - Image
+                tagIds:
+                - 1
+                - 2
+                author:
+                  profileId: user-123
+                  name: John Doe
+                  nickname: johndoe
+                  description: Tech enthusiast and product reviewer
+                  url: https://example.com/users/johndoe
+                  avatarUrl: https://example.com/avatars/johndoe.jpg
+                  subscribers: 1500
+                  gender: M
+                  isVerified: true
+                  geo:
+                    countryCode: US
+                    country: United States
+                    city: New York
+                channel:
+                  profileId: channel-456
+                  name: Product Reviews
+                  nickname: productreviews
+                  url: https://example.com/channels/productreviews
+                  avatarUrl: https://example.com/avatars/channel.jpg
+                  subscribers: 50000
+                  isVerified: true
+                engagement:
+                  likes: 42
+                  comments: 5
+                  shares: 3
+                  views: 1250
+                  reactions: 50
+                  reach: 5000
+                  impressions: 7500
+                  saves: 723
+                mentionGeo:
+                  countryCode: US
+                  country: United States
+                  city: San Francisco
+                imageUrl: https://example.com/images/product.jpg
+                rating: 4.5
+                language: eng
+      responses:
+        '201':
+          description: Import created.
+          headers:
+            Location:
+              description: URL of the created import.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  importId:
+                    type: integer
+                    description: Unique identifier for this import.
+                  name:
+                    type:
+                    - string
+                    - 'null'
+                    description: Name of the import.
+                  totalReceived:
+                    type: integer
+                    description: Number of mentions received.
+                  status:
+                    type: string
+                    description: Current status of the import.
+              example:
+                importId: 12345678
+                name: Q4 2024 Customer Feedback
+                totalReceived: 1
+                status: pending
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '413':
+          description: Request payload is too large. Split your batch into smaller ones.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags:
+      - Data Import
+      operationId: listImports
+      summary: List imports
+      description: Get a list of all imports for a topic, optionally filtered by status.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - name: status
+        in: query
+        description: Filter by status.
+        schema:
+          type: string
+          enum:
+          - Pending
+          - Processing
+          - Completed
+          - Failed
+          - Aborted
+      responses:
+        '200':
+          description: Imports of the topic.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImportStatus'
+              example:
+                imports:
+                - importId: 12345678
+                  name: Q4 2024 Customer Feedback
+                  totalMentions: 100
+                  savedCount: 100
+                  failedCount: 0
+                  status: Completed
+                  createdAt: '2024-12-15T10:00:00Z'
+                  startedAt: '2024-12-15T10:01:00Z'
+                  completedAt: '2024-12-15T10:15:00Z'
+                  lastError: null
+                - importId: 12345679
+                  name: LinkedIn Campaign Data
+                  totalMentions: 50
+                  savedCount: 25
+                  failedCount: 0
+                  status: Processing
+                  createdAt: '2024-12-15T11:00:00Z'
+                  startedAt: '2024-12-15T11:01:00Z'
+                  completedAt: null
+                  lastError: null
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/imports/{importId}:
+    get:
+      tags:
+      - Data Import
+      operationId: getImportStatus
+      summary: Get import status
+      description: Get the current status of a data import job.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/ImportId'
+      responses:
+        '200':
+          description: Import status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportStatus'
+              example:
+                importId: 12345678
+                name: Q4 2024 Customer Feedback
+                totalMentions: 100
+                savedCount: 85
+                failedCount: 5
+                status: Processing
+                createdAt: '2024-12-15T10:00:00Z'
+                startedAt: '2024-12-15T10:01:00Z'
+                completedAt: null
+                lastError: null
+        '404':
+          description: Import not found, or the topic isn't found or accessible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: RESOURCE_NOT_FOUND
+                message: Import not found
+                resourceType: Import
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/imports/{importId}/abort:
+    post:
+      tags:
+      - Data Import
+      operationId: abortImport
+      summary: Abort import
+      description: Abort a running import job. Only imports in "Pending" or "Processing" status can be aborted.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/ImportId'
+      responses:
+        '200':
+          description: Abort requested.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  importId:
+                    type: integer
+                    description: Import identifier.
+                  status:
+                    type: string
+                    description: Current status message.
+              example:
+                importId: 12345678
+                status: Aborting in progress
+        '400':
+          description: Import cannot be aborted in its current status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: IMPORT_NOT_ABORTABLE
+                message: Import can only be aborted when it is in Pending or Processing status
+        '404':
+          description: Import not found, or the topic isn't found or accessible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: RESOURCE_NOT_FOUND
+                message: Import not found
+                resourceType: Import
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/imports/{importId}/errors:
+    get:
+      tags:
+      - Data Import
+      operationId: getImportErrors
+      summary: Get import errors
+      description: Get a list of errors that occurred during the import process.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/ImportId'
+      responses:
+        '200':
+          description: Import errors.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImportError'
+              example:
+                errors:
+                - permaLink: https://example.com/post/1
+                  error: 'Save failed with status: Duplicate'
+                  attemptCount: 1
+                  createdAt: '2024-12-15T10:05:00Z'
+        '404':
+          description: Import not found, or the topic isn't found or accessible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: RESOURCE_NOT_FOUND
+                message: Import not found
+                resourceType: Import
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  responses:
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    Unauthorized:
+      description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+  schemas:
+    ImportError:
+      type: object
+      properties:
+        permaLink:
+          type: string
+          description: URL of the mention that failed.
+        error:
+          type: string
+          description: Error description.
+        errorCode:
+          type:
+          - string
+          - 'null'
+          description: Error code.
+        attemptCount:
+          type: integer
+          description: Number of processing attempts.
+        createdAt:
+          type: string
+          format: date-time
+          description: Error timestamp (ISO 8601).
+    ImportStatus:
+      type: object
+      properties:
+        importId:
+          type: integer
+          description: Unique import identifier.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Import name.
+        totalMentions:
+          type: integer
+          description: Total number of mentions in the import.
+        savedCount:
+          type: integer
+          description: Number of successfully saved mentions.
+        failedCount:
+          type: integer
+          description: Number of failed mentions.
+        status:
+          type: string
+          enum:
+          - Pending
+          - Processing
+          - Completed
+          - Failed
+          - Aborted
+          description: Current import status.
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO 8601).
+        startedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Processing start timestamp (ISO 8601).
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Completion timestamp (ISO 8601).
+        lastError:
+          type:
+          - string
+          - 'null'
+          description: Last error message.
+        source:
+          type: string
+          description: Where the import was created from (e.g. "Api", "Ui").
+        userEmail:
+          type:
+          - string
+          - 'null'
+          description: Email of the user who created the import.
+        userName:
+          type:
+          - string
+          - 'null'
+          description: Name of the user who created the import.
+        canShowMentions:
+          type: boolean
+          description: Whether the imported mentions can be viewed in the topic.
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    ImportMention:
+      type: object
+      required:
+      - url
+      - published
+      properties:
+        url:
+          type: string
+          description: Direct URL to the mention. Must be an absolute HTTP or HTTPS URL, unique per topic.
+        published:
+          type: string
+          format: date-time
+          description: Date when the mention was published (ISO 8601 format).
+        text:
+          type: string
+          description: Main text content of the mention.
+        title:
+          type: string
+          description: Title of the mention.
+        postId:
+          type: string
+          description: Unique identifier of the post.
+        parentPostId:
+          type: string
+          description: ID of the parent post (for comments/replies).
+        discussionId:
+          type: string
+          description: ID of the discussion thread.
+        originId:
+          type: string
+          description: Original source identifier.
+        source:
+          type: string
+          description: Source domain (e.g. "example.com"). Extracted from the URL if not provided.
+        postType:
+          type: string
+          enum:
+          - Post
+          - Comment
+          - Repost
+          description: Type of post. Default - "Post" if not provided or invalid.
+        sourceType:
+          type: string
+          enum:
+          - Social
+          - News
+          - Blog
+          - Forum
+          - Reviews
+          description: Type of source. Default - "Social" if not provided or invalid.
+        contentTypes:
+          type: array
+          items:
+            type: string
+            enum:
+            - Text
+            - Link
+            - Image
+            - Video
+            - Album
+            - Location
+            - Poll
+            - Subtitles
+            - Sticker
+          description: Types of content in the mention.
+        tagIds:
+          type: array
+          items:
+            type: integer
+          description: 'List of tag IDs to apply to the mention. Use the List Tags endpoint to get available tag IDs for the topic. Duplicate IDs are ignored.
+
+            '
+        subcategoryIds:
+          type: array
+          items:
+            type: integer
+          description: 'List of subcategory IDs to assign to the mention. Requires the Space Categories feature. Use the List Categories endpoint to get available subcategory IDs.
+
+            '
+        sourceSpecificFormat:
+          type: string
+          enum:
+          - InstagramReels
+          - InstagramStories
+          - PinterestStoryPins
+          - YouTubeShorts
+          - FacebookReels
+          - FacebookStories
+          - TikTokPhoto
+          - TwitterNote
+          - YouTubeLive
+          - FacebookLive
+          - TwitchLive
+          - TwitterCommunityNote
+          description: Source-specific format of the post. Should be omitted in most cases.
+        author:
+          $ref: '#/components/schemas/ImportProfile'
+        channel:
+          $ref: '#/components/schemas/ImportProfile'
+          description: Channel/publication place information.
+        engagement:
+          $ref: '#/components/schemas/ImportEngagement'
+        mentionGeo:
+          $ref: '#/components/schemas/ImportGeo'
+          description: Geographic location of the mention.
+        imageUrl:
+          type: string
+          description: URL of the main image.
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          description: Rating value (0-5).
+        language:
+          type: string
+          description: Language code (e.g. "eng").
+    ImportProfile:
+      type: object
+      properties:
+        profileId:
+          type: string
+          description: Unique identifier of the profile.
+        name:
+          type: string
+          description: Display name.
+        nickname:
+          type: string
+          description: Username/handle.
+        description:
+          type: string
+          description: Profile description/bio.
+        url:
+          type: string
+          description: Profile URL.
+        avatarUrl:
+          type: string
+          description: Avatar image URL.
+        subscribers:
+          type: integer
+          description: Number of subscribers/followers.
+        gender:
+          type: string
+          enum:
+          - M
+          - F
+          - Community
+          description: Gender. Use "Community" to mark non-person profiles (like a Facebook group or channel).
+        isVerified:
+          type: boolean
+          description: Verification status.
+        geo:
+          $ref: '#/components/schemas/ImportGeo'
+    ImportEngagement:
+      type: object
+      properties:
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        views:
+          type: integer
+        reactions:
+          type: integer
+          description: Total reactions.
+        reach:
+          type: integer
+          description: Potential reach.
+        impressions:
+          type: integer
+        saves:
+          type: integer
+    ImportGeo:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          description: ISO 2-letter country code (e.g. "US").
+        country:
+          type: string
+          description: Country name.
+        city:
+          type: string
+          description: City name.
+  parameters:
+    ImportId:
+      name: importId
+      in: path
+      required: true
+      description: ID of the Import.
+      schema:
+        type: integer
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication. The recommended way to authenticate requests.
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+      description: API key as a query parameter. For testing purposes only.

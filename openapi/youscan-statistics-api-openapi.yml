@@ -1,0 +1,1113 @@
+openapi: 3.1.0
+info:
+  title: YouScan Data Import Statistics API
+  version: '1.0'
+  contact:
+    name: YouScan Support
+    url: https://youscan.io
+  license:
+    name: Proprietary
+    url: https://youscan.io/terms-of-service
+  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+servers:
+- url: https://api.youscan.io/api/external
+security:
+- ApiKeyHeader: []
+- ApiKeyQuery: []
+tags:
+- name: Statistics
+  description: 'Aggregated statistics for mentions of a topic.
+
+
+    ### Dates
+
+
+    `from` and `to` are dates (`yyyy-MM-dd`); `to` is inclusive. Day boundaries are
+
+    computed in the API key owner''s time zone (see *Dates and time zones* in the Mentions section).
+
+
+    ### Filters
+
+
+    All statistics endpoints accept a common set of optional filters:
+
+
+    - `country` (`string[]`): e.g. `country=uk&country=us`
+
+    - `excludeCountry` (`string[]`): e.g. `excludeCountry=uk&excludeCountry=us`
+
+    - `sourceTypes` (`string[]`): one of `blog`, `forum`, `news`, `social`, `reviews`, `messenger` (e.g. `sourceTypes=social&sourceTypes=blog`)
+
+    - `excludeSourceTypes` (`string[]`): same values as `sourceTypes`
+
+    - `sources` (`string[]`): e.g. `sources=telegram.me&sources=youscan.io`
+
+    - `excludeSources` (`string[]`): e.g. `excludeSources=telegram.me&excludeSources=youscan.io`
+
+    - `tags` (`int[]`): filter by tag IDs
+
+    - `excludeTag` (`int[]`): exclude filter by tag IDs
+
+
+    Every statistics response contains a `totalCount` field — the total number of mentions matching the filters.
+
+
+    An unknown or inaccessible `topicId` returns `404` with `message: "Theme not found"`.
+
+    '
+paths:
+  /topics/{topicId}/statistics/sentiments:
+    get:
+      tags:
+      - Statistics
+      operationId: getSentimentsStatistics
+      summary: Sentiment
+      description: Distribution of mentions by sentiment.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Sentiment distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sentiments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                sentiments:
+                - name: Positive
+                  count: 48
+                - name: Neutral
+                  count: 119
+                - name: Negative
+                  count: 25
+                totalCount: 192
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/tags:
+    get:
+      tags:
+      - Statistics
+      operationId: getTagsStatistics
+      summary: Tags
+      description: Distribution of mentions by tags.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: size
+        in: query
+        description: Limits the number of tags returned.
+        schema:
+          type: integer
+          default: 10
+          maximum: 200
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Tags distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                tags:
+                - name: WOM
+                  count: 249
+                - name: Topic/Bloggers
+                  count: 115
+                - name: Topic/Social
+                  count: 64
+                totalCount: 428
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/words:
+    get:
+      tags:
+      - Statistics
+      operationId: getWordsStatistics
+      summary: Word cloud
+      description: Top words mentioned together with the topic.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: size
+        in: query
+        description: Limits the number of words returned.
+        schema:
+          type: integer
+          default: 25
+          maximum: 200
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Word cloud data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  words:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                words:
+                - name: fast
+                  count: 73
+                - name: health
+                  count: 55
+                - name: apple
+                  count: 12
+                totalCount: 140
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/countries:
+    get:
+      tags:
+      - Statistics
+      operationId: getCountriesStatistics
+      summary: Countries
+      description: 'Distribution of mentions by country, including per-country sentiment, top sources, authors count and engagement.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: size
+        in: query
+        description: Limits the number of countries returned.
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+      - name: sourcesSize
+        in: query
+        description: Limits the number of sources returned for each country.
+        schema:
+          type: integer
+          default: 5
+          maximum: 20
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Countries distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  countries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: ISO alpha-2 country code.
+                        count:
+                          type: integer
+                        sentiments:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/NameCount'
+                        sources:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/NameCount'
+                        otherSourcesCount:
+                          type: integer
+                          description: Number of mentions from sources beyond the returned top.
+                        authorsCount:
+                          type: integer
+                        engagement:
+                          type: integer
+                  totalCount:
+                    type: integer
+              example:
+                countries:
+                - name: US
+                  count: 8812
+                  sentiments:
+                  - name: Neutral
+                    count: 6173
+                  - name: Positive
+                    count: 2063
+                  - name: Negative
+                    count: 576
+                  sources:
+                  - name: youtube.com
+                    count: 4240
+                  - name: facebook.com
+                    count: 238
+                  - name: maps.google.com
+                    count: 135
+                  otherSourcesCount: 4047
+                  authorsCount: 6920
+                  engagement: 20695
+                totalCount: 34083
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/cities:
+    get:
+      tags:
+      - Statistics
+      operationId: getCitiesStatistics
+      summary: Cities
+      description: Distribution of mentions by city.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: size
+        in: query
+        description: Limits the number of cities returned.
+        schema:
+          type: integer
+          default: 50
+          maximum: 1000
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Cities distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: City identifier.
+                        name:
+                          type: string
+                        count:
+                          type: integer
+                  missingCount:
+                    type:
+                    - integer
+                    - 'null'
+                    description: Number of mentions without a detected city. May be `null`.
+                  otherCount:
+                    type: integer
+                    description: Number of mentions from cities beyond the returned top.
+                  totalCount:
+                    type: integer
+              example:
+                cities:
+                - id: R123
+                  name: New York
+                  count: 73
+                - id: R124
+                  name: London
+                  count: 55
+                missingCount: 10
+                otherCount: 4
+                totalCount: 142
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/regions-sentiments:
+    get:
+      tags:
+      - Statistics
+      operationId: getRegionsSentimentsStatistics
+      summary: Sentiment by regions
+      description: Distribution of mentions by region with sentiment breakdown.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: size
+        in: query
+        description: Limits the number of regions returned.
+        schema:
+          type: integer
+          default: 5
+          maximum: 100
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Regions with sentiment breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TermWithSentiments'
+                  totalCount:
+                    type: integer
+              example:
+                regions:
+                - name: New York
+                  count: 73
+                  sentiments:
+                  - name: Positive
+                    count: 13
+                  - name: Neutral
+                    count: 50
+                  - name: Negative
+                    count: 10
+                - name: London
+                  count: 55
+                  sentiments:
+                  - name: Positive
+                    count: 9
+                  - name: Neutral
+                    count: 41
+                  - name: Negative
+                    count: 5
+                totalCount: 128
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/sources-sentiments:
+    get:
+      tags:
+      - Statistics
+      operationId: getSourcesSentimentsStatistics
+      summary: Sentiment by sources
+      description: Distribution of mentions by source with sentiment breakdown.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: size
+        in: query
+        description: Limits the number of sources returned.
+        schema:
+          type: integer
+          default: 7
+          maximum: 100
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Sources with sentiment breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TermWithSentiments'
+                  totalCount:
+                    type: integer
+              example:
+                sources:
+                - name: youscan.io
+                  count: 73
+                  sentiments:
+                  - name: Positive
+                    count: 13
+                  - name: Neutral
+                    count: 50
+                  - name: Negative
+                    count: 10
+                - name: vk.com
+                  count: 55
+                  sentiments:
+                  - name: Positive
+                    count: 9
+                  - name: Neutral
+                    count: 41
+                  - name: Negative
+                    count: 5
+                totalCount: 128
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/regions-sources-sentiments:
+    get:
+      tags:
+      - Statistics
+      operationId: getRegionsSourcesSentimentsStatistics
+      summary: Sentiment by sources by regions
+      description: Distribution of mentions by region, broken down by sources with sentiment.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: regionsSize
+        in: query
+        description: Limits the number of regions returned.
+        schema:
+          type: integer
+          default: 5
+          maximum: 100
+      - name: sourcesSize
+        in: query
+        description: Limits the number of sources returned for each region.
+        schema:
+          type: integer
+          default: 7
+          maximum: 100
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Regions with per-source sentiment breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        count:
+                          type: integer
+                        sources:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/TermWithSentiments'
+                        otherSourcesCount:
+                          type: integer
+                  otherRegionsCount:
+                    type: integer
+                  totalCount:
+                    type: integer
+              example:
+                regions:
+                - name: New York
+                  count: 250
+                  sources:
+                  - name: youscan.io
+                    count: 73
+                    sentiments:
+                    - name: Positive
+                      count: 13
+                    - name: Neutral
+                      count: 50
+                    - name: Negative
+                      count: 10
+                  - name: vk.com
+                    count: 55
+                    sentiments:
+                    - name: Positive
+                      count: 9
+                    - name: Neutral
+                      count: 41
+                    - name: Negative
+                      count: 5
+                otherRegionsCount: 12
+                totalCount: 400
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/histogram:
+    get:
+      tags:
+      - Statistics
+      operationId: getHistogramStatistics
+      summary: Histogram
+      description: 'Mentions count, authors count, engagement, and optionally sentiment per date interval for a period. When `interval` is `day`, the requested period must be less than 3 months.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: interval
+        in: query
+        description: Histogram interval.
+        schema:
+          type: string
+          enum:
+          - hour
+          - day
+          - week
+          - month
+          - quarter
+          - year
+          default: day
+      - name: sentiment
+        in: query
+        description: Whether to include sentiment distribution.
+        schema:
+          type: boolean
+          default: false
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Histogram data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                          format: date-time
+                          description: Start of the interval.
+                        count:
+                          type: integer
+                        authorsCount:
+                          type: integer
+                        engagement:
+                          type: integer
+                        sentiment:
+                          type: object
+                          description: Present when the `sentiment` parameter is `true`.
+                          properties:
+                            positive:
+                              type: integer
+                            neutral:
+                              type: integer
+                            negative:
+                              type: integer
+                  authorsCount:
+                    type: integer
+                    description: Total unique authors for the period.
+                  engagement:
+                    type: integer
+                    description: Total engagement for the period.
+                  totalCount:
+                    type: integer
+              example:
+                dates:
+                - key: '2022-05-21T00:00:00+00:00'
+                  count: 304
+                  authorsCount: 207
+                  engagement: 7907
+                  sentiment:
+                    neutral: 239
+                    positive: 61
+                    negative: 4
+                - key: '2022-05-22T00:00:00+00:00'
+                  count: 208
+                  authorsCount: 153
+                  engagement: 7272
+                  sentiment:
+                    neutral: 185
+                    positive: 21
+                    negative: 2
+                authorsCount: 1309
+                engagement: 45878
+                totalCount: 2195
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/genders:
+    get:
+      tags:
+      - Statistics
+      operationId: getGendersStatistics
+      summary: Genders
+      description: Distribution of mentions by author gender.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Genders distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                genders:
+                - name: male
+                  count: 26
+                - name: unknown
+                  count: 16
+                - name: community
+                  count: 4
+                - name: female
+                  count: 4
+                totalCount: 50
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/ages:
+    get:
+      tags:
+      - Statistics
+      operationId: getAgesStatistics
+      summary: Ages
+      description: Distribution of mentions by author age.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Ages distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                ages:
+                - name: '19'
+                  count: 2
+                - name: '35'
+                  count: 2
+                - name: '22'
+                  count: 1
+                totalCount: 5
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/links:
+    get:
+      tags:
+      - Statistics
+      operationId: getLinksStatistics
+      summary: Links
+      description: Get statistics for top links and hosts (domains).
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - name: size
+        in: query
+        description: Limits the number of links and hosts returned.
+        schema:
+          type: integer
+          default: 10
+          maximum: 100
+      - name: sort
+        in: query
+        description: Sorting criteria.
+        schema:
+          type: string
+          enum:
+          - count
+          - totalEngagement
+          - avgEngagement
+          default: count
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Top links and hosts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LinkItem'
+                  hosts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LinkItem'
+                  totalCount:
+                    type: integer
+              example:
+                totalCount: 87
+                links:
+                - totalEngagement: 49
+                  avgEngagement: 8.17
+                  key: telegra.ph/how-to-find-youscan-office-02-15
+                  count: 6
+                  sentiment:
+                    values:
+                    - key: neutral
+                      count: 6
+                    otherCount: 0
+                hosts:
+                - totalEngagement: 49
+                  avgEngagement: 8.17
+                  key: telegra.ph
+                  count: 6
+                  sentiment:
+                    values:
+                    - key: neutral
+                      count: 6
+                    otherCount: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/metrics:
+    get:
+      tags:
+      - Statistics
+      operationId: getMetricsStatistics
+      summary: Engagement metrics
+      description: Summary engagement metrics for mentions matching the filters.
+      parameters:
+      - $ref: '#/components/parameters/TopicId'
+      - $ref: '#/components/parameters/StatisticsFrom'
+      - $ref: '#/components/parameters/StatisticsTo'
+      - $ref: '#/components/parameters/StatisticsCountry'
+      - $ref: '#/components/parameters/StatisticsExcludeCountry'
+      - $ref: '#/components/parameters/StatisticsSourceTypes'
+      - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+      - $ref: '#/components/parameters/StatisticsSources'
+      - $ref: '#/components/parameters/StatisticsExcludeSources'
+      - $ref: '#/components/parameters/StatisticsTags'
+      - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Summary metrics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalEngagement:
+                    type: integer
+                  authorsCount:
+                    type: integer
+                  sourcesCount:
+                    type: integer
+                  viewsCount:
+                    type: integer
+                  subscribersCount:
+                    type: integer
+                  totalCount:
+                    type: integer
+              example:
+                totalEngagement: 45878
+                authorsCount: 1309
+                sourcesCount: 87
+                viewsCount: 120034
+                subscribersCount: 2400500
+                totalCount: 2195
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  responses:
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    Unauthorized:
+      description: The API key is missing or invalid.
+  parameters:
+    StatisticsExcludeTag:
+      name: excludeTag
+      in: query
+      description: Exclude mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: integer
+    StatisticsExcludeSources:
+      name: excludeSources
+      in: query
+      description: Exclude mentions by source. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+    StatisticsSources:
+      name: sources
+      in: query
+      description: Filter mentions by source. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+      example:
+      - telegram.me
+      - youscan.io
+    StatisticsExcludeSourceTypes:
+      name: excludeSourceTypes
+      in: query
+      description: Exclude mentions by source type. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/SourceTypeFilter'
+    StatisticsExcludeCountry:
+      name: excludeCountry
+      in: query
+      description: Exclude mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+    StatisticsCountry:
+      name: country
+      in: query
+      description: Filter mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+      example:
+      - us
+      - ua
+    StatisticsSourceTypes:
+      name: sourceTypes
+      in: query
+      description: Filter mentions by source type. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/SourceTypeFilter'
+    StatisticsFrom:
+      name: from
+      in: query
+      description: 'ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner''s time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.
+
+        '
+      schema:
+        type: string
+        format: date
+        example: '2024-01-01'
+    StatisticsTo:
+      name: to
+      in: query
+      description: 'ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner''s time zone (see *Dates and time zones* in the Mentions section). Default - today.
+
+        '
+      schema:
+        type: string
+        format: date
+        example: '2024-12-31'
+    StatisticsTags:
+      name: tags
+      in: query
+      description: Filter mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: integer
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+  schemas:
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    LinkItem:
+      type: object
+      properties:
+        key:
+          type: string
+          description: The link, or the root domain for hosts.
+        count:
+          type: integer
+          description: Number of mentions containing the link.
+        totalEngagement:
+          type: integer
+        avgEngagement:
+          type: number
+          description: Average engagement per mention. Omitted when the link has no engagement.
+        sentiment:
+          type: object
+          description: Distribution by sentiment.
+          properties:
+            values:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    enum:
+                    - positive
+                    - neutral
+                    - negative
+                    - undefined
+                  count:
+                    type: integer
+            otherCount:
+              type: integer
+    SourceTypeFilter:
+      type: string
+      enum:
+      - blog
+      - forum
+      - news
+      - social
+      - reviews
+      - messenger
+    NameCount:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the bucket.
+        count:
+          type: integer
+          description: Number of mentions in the bucket.
+    TermWithSentiments:
+      type: object
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+        sentiments:
+          type: array
+          description: Distribution by sentiment.
+          items:
+            $ref: '#/components/schemas/NameCount'
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication. The recommended way to authenticate requests.
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+      description: API key as a query parameter. For testing purposes only.
