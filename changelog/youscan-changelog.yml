@@ -1,0 +1,45 @@
+generated: '2026-07-21'
+method: searched
+source: developers.youscan.io/api/openapi.yaml (Version history tag)
+summary: >-
+  YouScan maintains a dated "Version history" in its API docs. Changes are additive
+  (new endpoints, filters, and response fields); no breaking changes announced in the
+  captured window.
+scheme: dated-additive
+current_version: '1.0'
+entries:
+- date: '2026-06-12'
+  breaking: false
+  highlights:
+  - Documentation migrated to a generated OpenAPI 3.1 specification.
+  - Documented previously missing endpoints (get mentions by IDs, engagement metrics statistics).
+- date: '2026-04-17'
+  breaking: false
+  highlights:
+  - Added GET /spaces to list spaces available to the authenticated user.
+  - Added GET /spaces/{spaceId}/categories to list categories in a space.
+  - Added categories field to mention responses.
+- date: '2026-03-04'
+  breaking: false
+  highlights:
+  - Added tagIds field to import mentions, allowing tag assignment during import.
+- date: '2025-11-19'
+  breaking: false
+  highlights:
+  - Added postTypes / excludePostTypes filters for mentions (post, repost, extendedRepost, comment).
+- date: '2025-01-14'
+  breaking: false
+  highlights:
+  - Added addedFrom / addedTo filters to filter mentions by date added to the topic.
+- date: '2022-01-11'
+  breaking: false
+  highlights:
+  - Added distribution by cities statistics.
+- date: '2020-12-09'
+  breaking: false
+  highlights:
+  - Added Countries statistics.
+- date: '2019-08-06'
+  breaking: false
+  highlights:
+  - Added Authors/Publication-places statistics and exclude-* filters to statistics endpoints.

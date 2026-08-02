@@ -1,0 +1,43 @@
+generated: '2026-07-21'
+method: searched
+source: openapi/youscan-openapi.yaml (Webhook tag, WebhookMention schema) + help.youscan.io/en/articles/3371690
+type: Webhooks
+summary: >-
+  YouScan pushes new mentions to subscriber URLs via outbound HTTP webhooks. Webhooks
+  are configured per-topic in the YouScan UI (Settings -> Integrations); there is NO API
+  to create them. YouScan does not publish a formal AsyncAPI document, so this is a
+  captured webhook catalog rather than a verbatim AsyncAPI spec.
+delivery:
+  transport: HTTPS POST
+  content_type: application/json
+  ack: Respond with any 2xx within 4 minutes; other responses or timeouts are treated as failed delivery.
+  auth: Optional HTTP Basic via credentials embedded in the callback URL (https://user:password@example.com/callback)
+  config: Per topic; multiple topics may target one URL, and one topic may have multiple webhooks.
+  triggers: Rule-based alerts (automatic) or manual send from the mention stream.
+  null_fields: Fields with null values are omitted from the payload.
+limitations: >-
+  Mentions from Reddit, Quora and some smaller sources are not delivered. Twitter/X
+  mentions are restricted — text, URL and author details are removed.
+events:
+- name: mention.found
+  operationId: mentionFoundWebhook
+  direction: outbound
+  description: Sent every time a new mention is found and saved to a subscribed topic.
+  payload_schema: WebhookMention
+  key_fields:
+  - topicId
+  - topicName
+  - mentionId
+  - sourceName
+  - author
+  - text
+  - url
+  - published
+  - addedAt
+  - sentiment
+  - postType
+  - engagement
+  - reactions
+  - country
+  - imageBrands
+  - imageObjects

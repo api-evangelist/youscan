@@ -1,0 +1,74 @@
+generated: '2026-07-21'
+method: derived
+source: openapi/youscan-openapi.yaml ($ref graph + id-reference fields)
+summary: >-
+  Entity-relationship graph for the YouScan API, derived from the OpenAPI schemas and
+  path parameters. A Space contains Topics; a Topic is the central resource that owns
+  Mentions, Tags, History jobs, and Import jobs.
+entities:
+- name: Space
+  id_field: id
+  description: Workspace grouping topics and categories; scoped to the account.
+  schema: Space
+- name: Category
+  id_field: id
+  description: Classification configured within a Space; has SubCategories.
+  schema: Category
+- name: Topic
+  id_field: id
+  aliases: [theme]
+  description: A monitoring query (a.k.a. theme). Central resource of the API.
+  schema: TopicInfo
+- name: Mention
+  id_field: id
+  description: A single collected social/web mention within a topic.
+  schema: Mention
+- name: Tag
+  id_field: id
+  description: A label applied to mentions within a topic.
+  schema: Tag
+- name: HistoryJob
+  id_field: topicId
+  description: A historical-collection job for a topic.
+  schema: HistoryJobDetails
+- name: Import
+  id_field: importId
+  description: A data-import job that loads external mentions into a topic.
+  schema: ImportStatus
+relationships:
+- from: Space
+  type: has_many
+  to: Topic
+  via: spaceId
+- from: Space
+  type: has_many
+  to: Category
+  via: spaceId (GET /spaces/{spaceId}/categories)
+- from: Category
+  type: has_many
+  to: SubCategory
+  via: subCategories
+- from: Topic
+  type: has_many
+  to: Mention
+  via: topicId (GET /topics/{topicId}/mentions)
+- from: Topic
+  type: has_many
+  to: Tag
+  via: topicId (GET /topics/{topicId}/tags)
+- from: Topic
+  type: has_one
+  to: HistoryJob
+  via: topicId (GET /topics/{topicId}/history)
+- from: Topic
+  type: has_many
+  to: Import
+  via: topicId (GET /topics/{topicId}/imports)
+- from: Mention
+  type: has_many
+  to: Tag
+  via: tags[] / tagIds
+- from: Import
+  type: has_many
+  to: Mention
+  via: importId (imported mentions)

@@ -1,0 +1,3781 @@
+openapi: 3.1.0
+
+info:
+  title: YouScan API
+  version: '1.0'
+  contact:
+    name: YouScan Support
+    url: https://youscan.io
+  license:
+    name: Proprietary
+    url: https://youscan.io/terms-of-service
+  description: |
+    YouScan provides a REST API to manage topics, retrieve mentions, and query statistics
+    collected by the YouScan social media listening platform.
+
+    ## Authentication
+
+    YouScan API uses a token authentication scheme. Requests should contain the header
+    `X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).
+
+    ```bash
+    curl -X GET \
+      --url "https://api.youscan.io/api/external/topics" \
+      --header "Accept: application/json" \
+      --header "X-API-KEY: **********"
+    ```
+
+    ## Permissions
+
+    Each API key belongs to a single user in a single account and inherits that user's access.
+    Most endpoints act on a topic, and what you may do depends on your permission level for it:
+
+    - **View** — read mentions, statistics and tags; create and abort imports
+    - **Edit** — View, plus create tags and bulk-update mentions
+    - **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection
+
+    Administrators and managers have full access to all topics in their spaces.
+
+    When your access is insufficient, endpoints respond with:
+
+    - **403 Forbidden** — you can see the topic but your permission level is too low for the action.
+    - **404 Not Found** (`message: "Theme not found"`) — the topic doesn't exist or isn't visible
+      to your account. Existence is intentionally not revealed.
+    - **402 Payment Required** — your subscription plan doesn't include the API access the
+      endpoint requires.
+
+    Creating a topic also requires permission to create topics in the target space: administrators
+    and managers always can; a regular member can only if granted the "create topics" permission,
+    otherwise the request returns **403**.
+
+    ## Rate limits
+
+    We recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.
+
+    Requests beyond those limits might be rejected with 429 status code (`Too Many Requests`).
+
+    ## Status and error codes
+
+    YouScan uses conventional HTTP response codes to indicate the success or failure of an API request.
+
+    In general, codes in the 200 range indicate success. Codes in the 400 range indicate an error
+    that failed given the information provided (for example, a required parameter was omitted).
+    Codes in the 500 range indicate an error with YouScan's servers.
+
+    Besides the status code, `errorCode` and `message` fields are returned in the response body for
+    all types of client errors. The `errorCode` field should be used by robots, while `message`
+    contains user-friendly information.
+
+    Sending an invalid request results in a `400 Bad Request` response with `errorCode` equal to
+    `VALIDATION_ERROR`:
+
+    ```json
+    {
+      "message": "Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.",
+      "errorCode": "VALIDATION_ERROR",
+      "errors": [
+        {
+          "field": "Name",
+          "errorCode": "length_error",
+          "message": "'Name' must be between 1 and 75 characters. You entered 500 characters."
+        }
+      ]
+    }
+    ```
+
+servers:
+  - url: https://api.youscan.io/api/external
+
+security:
+  - ApiKeyHeader: []
+  - ApiKeyQuery: []
+
+tags:
+  - name: Topics
+    description: |
+      Create and manage topics — the monitoring entities that collect mentions matching your queries.
+
+      ### Topic query structure
+
+      A topic query consists of a `textQuery` and/or `viQuery` (at least one is required) plus an optional `filter`.
+
+      For all topic query filters, the following field names are supported:
+
+      - `country`: ISO2 country code (e.g. `country=US`, `country=UA`)
+      - `countryGroup`: Europe, Asia, NorthAmerica, CentralAmerica, TheCaribbean, SouthAmerica, Africa, Oceania (e.g. `countryGroup=Europe`)
+      - `language`: ISO639-2 language code (e.g. `language=ENG`, `language=UKR`)
+      - `source`: domain format (e.g. `source=instagram.com`)
+      - `sourceType`: social, messenger, reviews, news, blog, forum (e.g. `sourceType=social`)
+      - `postType`: post, repost, extendedRepost, comment (e.g. `postType=post`)
+      - `contentType`: text, link, image, video, poll, subtitles, sticker (e.g. `contentType=image`)
+      - `authorAge`: numeric value (e.g. `authorAge=18`)
+      - `authorSubscribers`: numeric value (e.g. `authorSubscribers=1000`)
+      - `gender`: `male` or `female` (e.g. `gender=male`)
+
+      Supported Visual Insights (VI) query values (used inside `viQuery`):
+
+      - `logo`: detect specific brand logos (e.g. `logo:"nike"`)
+      - `image.object`: find specific objects (e.g. `image.object:"car"`)
+      - `image.activity`: find activities (e.g. `image.activity:"cooking"`)
+      - `image.person`: find people types (e.g. `image.person:"athlete"`)
+      - `image.scene`: find settings (e.g. `image.scene:"beach"`)
+      - `image.type`: filter by image type (e.g. `image.type:"PHOTO"`)
+      - `image.subtype`: filter by image subtype (e.g. `image.subtype:"selfie"`)
+      - `text`: search mention text (e.g. `text:"sale"`)
+
+      Supported operations for each filter:
+
+      - `oneOf`: field value must match one of the specified values. Applicable to most fields.
+      - `notOneOf`: field value must not match any of the specified values. Applicable to most fields.
+      - `greaterOrEqual`: field value must be greater than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).
+      - `lessOrEqual`: field value must be less than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).
+
+      Each filter object must specify:
+      - `fieldName`: The field to filter on (see the list above)
+      - `op`: The operation to perform (see the list above)
+      - `value`: JSON-encoded array of values (e.g. `["ua"]`)
+  - name: History
+    description: |
+      Manage historical data collection for a topic.
+
+      Starting a collection can return `400` if a collection is already running, if the date
+      range is invalid, or if the requested depth exceeds your plan's history limit.
+  - name: Tags
+    description: Manage tags created in your topic.
+  - name: Spaces
+    description: Spaces available to the authenticated user and categories configured in them.
+  - name: Statistics
+    description: |
+      Aggregated statistics for mentions of a topic.
+
+      ### Dates
+
+      `from` and `to` are dates (`yyyy-MM-dd`); `to` is inclusive. Day boundaries are
+      computed in the API key owner's time zone (see *Dates and time zones* in the Mentions section).
+
+      ### Filters
+
+      All statistics endpoints accept a common set of optional filters:
+
+      - `country` (`string[]`): e.g. `country=uk&country=us`
+      - `excludeCountry` (`string[]`): e.g. `excludeCountry=uk&excludeCountry=us`
+      - `sourceTypes` (`string[]`): one of `blog`, `forum`, `news`, `social`, `reviews`, `messenger` (e.g. `sourceTypes=social&sourceTypes=blog`)
+      - `excludeSourceTypes` (`string[]`): same values as `sourceTypes`
+      - `sources` (`string[]`): e.g. `sources=telegram.me&sources=youscan.io`
+      - `excludeSources` (`string[]`): e.g. `excludeSources=telegram.me&excludeSources=youscan.io`
+      - `tags` (`int[]`): filter by tag IDs
+      - `excludeTag` (`int[]`): exclude filter by tag IDs
+
+      Every statistics response contains a `totalCount` field — the total number of mentions matching the filters.
+
+      An unknown or inaccessible `topicId` returns `404` with `message: "Theme not found"`.
+  - name: Mentions
+    description: |
+      Retrieve and update mentions collected in a topic.
+
+      ### How to effectively retrieve large sets of mentions
+
+      Common scenarios are:
+      * Load all the mentions from a given topic for a given period
+      * Periodically poll a topic to get new mentions (see the next section)
+
+      Every list response contains:
+
+      - `total` — the number of mentions matching your filters, across all pages;
+      - `mentions` — one page of results, at most `size` of them (default 10, max 1000);
+      - `lastSeq` — a sequence-number high-water mark (see the cursor loop below).
+
+      If `total` exceeds the number of mentions you received, there is more to fetch. Use
+      the `sinceSeq` cursor: every mention has a `seq` number, assigned in the order
+      mentions were saved to the topic, and cursor paging over it has no depth limit and
+      never skips or duplicates mentions.
+
+      The cursor loop:
+
+      1. Start the session:
+         ```
+         GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&orderBy=seqAsc
+         ```
+         `orderBy=seqAsc` returns mentions in the order they were saved to the topic.
+      2. Take the highest `seq` value from the returned `mentions` array and repeat the
+         request with `&sinceSeq={that value}`. `sinceSeq` is exclusive — the next page
+         starts right after it:
+         ```
+         GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&sinceSeq=8541234&orderBy=seqAsc
+         ```
+      3. Stop when a response returns fewer than `size` mentions.
+
+      ### Polling for new mentions
+
+      Mentions are discovered with a delay — minutes to hours after publication — and
+      history collection can add much older mentions at any time. Because `from`/`to` filter
+      by *publication* date, repeatedly fetching a fixed window such as "yesterday 22:00 —
+      today 07:00" misses every mention that was published inside the window but collected
+      after your request ran; such mentions never show up in any later window either.
+
+      Poll with the cursor instead:
+
+      1. Run the cursor loop above once and persist the highest `seq` you received.
+      2. On every subsequent run, start with `sinceSeq={persisted value}&orderBy=seqAsc`,
+         drain the pages, and persist the new high-water mark.
+
+      A mention gets its `seq` when it is saved to the topic, so late-arriving mentions are
+      always picked up by your next poll, no matter when they were published. Two additions:
+
+      - If you also need fields that change *after* a mention is saved — engagement counts,
+        corrected sentiment, added tags — periodically re-fetch a trailing window (say, the
+        last 72 hours), or use the `engagementCollectedFrom` / `addedFrom` filters.
+      - If you'd rather not poll at all, configure a webhook (see the Webhook section) and
+        receive each new mention the moment it is saved.
+
+      ### Dates and time zones
+
+      Date filters match mentions by their **publication date**. Two rules save a lot of
+      confusion:
+
+      - **Date values without an explicit UTC offset are interpreted in the API key owner's
+        time zone** — the time zone configured in the profile of the user the key belongs to.
+        To make requests unambiguous, always pass explicit offsets (`from=2026-06-01T00:00Z`)
+        or set the `timeZone` parameter.
+      - **`to` is inclusive**: the effective upper bound is `to` plus one day. `to=2026-06-21`
+        includes the whole of June 21.
+
+      The platform UI always shows periods in the signed-in user's time zone. To reproduce a
+      number seen in the UI, request the same period with `timeZone` set to that user's zone —
+      or convert the period boundaries to UTC yourself.
+
+      ### Deleted data
+
+      The API returns the current state of the topic at the moment of the request:
+
+      - a deleted topic returns `404` (`message: "Theme not found"`) — its mentions are no
+        longer accessible;
+      - deleted tags disappear from mention responses — there is no "deleted" marker;
+      - mentions moved to the Bin are excluded unless you pass `deleted=true`.
+
+      Data you exported earlier is not updated retroactively. If you keep a local copy,
+      reconcile it periodically against the current *List topics* and *List tags* responses.
+
+      ### Data limitations
+
+      > **Mentions from Reddit, Quora and several other forums and review websites are not accessible**
+      > via the list mentions endpoint.
+
+      > **Twitter data limitations**: We are limiting the data which can be accessed for mentions collected
+      > from Twitter. The following adjustments are applied:
+      > - Mention's Text and Full Text properties are removed
+      > - Mention URL is removed
+      > - Author URL, Author Name and Author AvatarUrl are removed
+      > - Profile ID of the author is added to Author information (the ID itself is the ID of the Twitter Profile)
+      > - Post ID is the ID of the Tweet
+      > - Combining Profile ID and Post ID allows you to navigate to the exact Tweet which was collected
+      >   as the corresponding mention.
+
+      ### Why API data may differ from the platform UI
+
+      The API and the platform read the same storage — for the same query they return the
+      same data. Almost every reported discrepancy turns out to be one of the causes
+      described above:
+
+      1. **Time zones.** The UI uses the viewer's time zone; your request may be using a
+         different one — see *Dates and time zones*.
+      2. **Sources not available via API.** Reddit, Quora and several other sources are
+         visible in the UI but never returned by the API. Exclude them in the UI search
+         before comparing counts — see *Data limitations*.
+      3. **Pagination.** One request returns at most 1,000 mentions. Compare the response
+         `total` with the UI count, not the number of rows you fetched — see *How to
+         effectively retrieve large sets of mentions*.
+      4. **Collection delays.** A period you fetched an hour ago may contain more mentions
+         now — see *Polling for new mentions*.
+      5. **Twitter restrictions.** Twitter mentions come without text, URL and author
+         details, which makes row-by-row comparison with UI exports misleading — see
+         *Data limitations*.
+      6. **Deleted data.** Deleted topics, tags and binned mentions disappear from
+         responses, while copies you saved earlier keep them — see *Deleted data*.
+
+      If the numbers still differ after checking all of the above, capture the exact request
+      URL, the time you sent it, and the raw response — and contact support with those
+      details.
+  - name: Data Import
+    description: |
+      The Data Import API allows you to import mentions from external sources into YouScan topics.
+      This feature enables you to bring historical data or mentions from sources not natively
+      supported by YouScan.
+
+      **Beta Notice**: This API is currently in beta and may undergo minor changes.
+  - name: Webhook
+    description: |
+      Webhooks push new mentions to your own server in real time, so you don't have to poll the
+      API. Every time a new mention is found and saved to a topic, YouScan sends an HTTP `POST`
+      with the mention payload to a URL you control.
+
+      ### Setup
+
+      Webhooks are configured in the YouScan UI — there is **no API to create them**. Open a
+      topic's **Settings → Integrations**, click **Add** next to *Webhook*, and enter your
+      destination URL. Full guide:
+      [How to use webhook integration](https://help.youscan.io/en/articles/3371690-how-to-use-webhook-integration).
+
+      - Set up **per topic** — point several topics at the same URL, or add several webhooks to one topic.
+      - Mentions are sent **automatically** via rule-based alerts, and can also be sent **manually** from the mention stream.
+      - For a protected endpoint, put Basic Auth credentials in the URL: `https://user:password@example.com/callback`.
+
+      ### Your endpoint
+
+      Respond with any `2xx` status code within **4 minutes** to acknowledge receipt; any other
+      response — or a timeout — is treated as a failed delivery. Fields with `null` values are
+      omitted from the payload.
+
+      > Mentions from Reddit, Quora and some smaller sources are not delivered. Twitter mentions
+      > are restricted — text, URL and author details are removed.
+  - name: Version history
+    description: |
+      ### 2026-06-12 Documentation migrated to OpenAPI
+
+      * The documentation is now generated from an OpenAPI 3.1 specification.
+      * Documented previously missing endpoints: get mentions by IDs, engagement metrics statistics.
+
+      ### 2026-04-17 Added spaces and categories endpoints, and mention categories
+
+      * Added `GET /spaces` to list spaces available to the authenticated user.
+      * Added `GET /spaces/{spaceId}/categories` to list categories configured in a space.
+      * Added `categories` field to mention responses.
+
+      ### 2026-03-04 Added tags support for data import
+
+      * Added `tagIds` field to import mentions, allowing to assign tags during import.
+        Use the List Tags endpoint to get available tag IDs.
+
+      ### 2025-11-19 Added PostTypes filter for mentions
+
+      * Added `postTypes` and `excludePostTypes` parameters to filter mentions by post type
+        (post, repost, extendedRepost, comment).
+
+      ### 2025-01-14 Added AddedFrom/AddedTo filters for mentions
+
+      * Added `addedFrom` and `addedTo` parameters to filter mentions by the date they were added to the topic.
+
+      ### 2022-01-11 Added distribution by cities
+
+      ### 2020-12-09 Added Countries statistics
+
+      ### 2019-08-06 Added Authors/Publication places statistics and excluding filters when getting statistics
+
+      * Added `excludeCountry`, `excludeSourceTypes`, `excludeSources`, `excludeTag` filters to **statistics** endpoints.
+
+      ### 2019-03-12 Added Links statistics
+
+      ### 2019-01-23 Added genders and ages statistics
+
+      ### 2018-11-29 Support creating tags
+
+paths:
+  /topics:
+    get:
+      tags: [Topics]
+      operationId: listTopics
+      summary: List topics
+      description: List all topics available in your account.
+      responses:
+        '200':
+          description: Topics available in the account.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  topics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TopicInfo'
+              example:
+                topics:
+                  - id: 41541
+                    name: Coca-cola
+                  - id: 41546
+                    name: Pepsi Cola
+                  - id: 41550
+                    name: Fanta
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Topics]
+      operationId: createTopic
+      summary: Create topic
+      description: Creates a new topic for mention monitoring.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, topicQuery]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 75
+                  description: Name of the topic (1-75 characters).
+                topicQuery:
+                  $ref: '#/components/schemas/TopicQuery'
+                sampling:
+                  type: number
+                  exclusiveMinimum: 0
+                  maximum: 1
+                  default: 1
+                  description: >
+                    Sampling rate (0 < value ≤ 1). Allows you to monitor a fraction of all matching
+                    mentions. Requires a subscription plan with sampling support, otherwise the
+                    request is rejected with `400`.
+                    Optional (default value is 1 — full sample).
+            example:
+              name: Topic Name
+              topicQuery:
+                textQuery: brand OR company
+                viQuery: logo:microsoft
+                filter:
+                  op: and
+                  filters:
+                    - fieldName: country
+                      op: notOneOf
+                      value: '["ua"]'
+              sampling: 0.5
+      responses:
+        '201':
+          description: Topic created.
+          headers:
+            Location:
+              description: URL of the created topic.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicInfo'
+              example:
+                id: 123
+                name: Topic Name
+                topicQuery:
+                  textQuery: brand OR company
+                  viQuery: logo:microsoft
+                sampling: 0.5
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '402':
+          $ref: '#/components/responses/HistoryLimitExceeded'
+        '403':
+          description: You don't have permission to create topics in the target space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: You don't have permission to create topics in this space
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/preview:
+    post:
+      tags: [Topics]
+      operationId: previewTopic
+      summary: Preview topic
+      description: >
+        Estimate the number of monthly mentions for a topic query before creating a topic.
+        This helps you check if your query is within your plan limits and if sampling is available.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topicQuery]
+              properties:
+                topicQuery:
+                  $ref: '#/components/schemas/TopicQuery'
+                sampling:
+                  type: number
+                  exclusiveMinimum: 0
+                  maximum: 1
+                  default: 1
+                  description: Sampling rate (0 < value ≤ 1). Optional (default value is 1 — full sample).
+            example:
+              topicQuery:
+                textQuery: brand OR company
+                viQuery: logo:microsoft
+                filter:
+                  op: and
+                  filters:
+                    - fieldName: country
+                      op: notOneOf
+                      value: '["ua"]'
+              sampling: 0.5
+      responses:
+        '200':
+          description: Estimation result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  monthlyCount:
+                    type: integer
+                    description: Estimated number of mentions per month for the query.
+                  monthlyLimit:
+                    type: integer
+                    description: Monthly mentions limit of your subscription plan.
+                  isWithinLimit:
+                    type: boolean
+                    description: Whether the estimated count fits into the plan limit.
+                  samplingAllowed:
+                    type: boolean
+                    description: Whether sampling is available in your subscription plan.
+                  sampling:
+                    type: [number, 'null']
+                    description: Sampling rate echoed from the request.
+              example:
+                monthlyCount: 12345
+                monthlyLimit: 20000
+                isWithinLimit: true
+                samplingAllowed: true
+                sampling: 0.5
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/query/edit:
+    post:
+      tags: [Topics]
+      operationId: updateTopicQuery
+      summary: Update topic query
+      description: Updates an existing topic's query parameters.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topicQuery]
+              properties:
+                topicQuery:
+                  $ref: '#/components/schemas/TopicQuery'
+            example:
+              topicQuery:
+                textQuery: updated brand OR company
+                viQuery: logo:microsoft
+                filter:
+                  op: and
+                  filters:
+                    - fieldName: country
+                      op: notOneOf
+                      value: '["ua"]'
+      responses:
+        '200':
+          description: Updated topic.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicInfo'
+              example:
+                id: 123
+                name: Topic Name
+                topicQuery:
+                  textQuery: updated brand OR company
+                  viQuery: logo:microsoft
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '402':
+          $ref: '#/components/responses/HistoryLimitExceeded'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}:
+    delete:
+      tags: [Topics]
+      operationId: deleteTopic
+      summary: Delete topic
+      description: Deletes a topic and all its associated data. This action is irreversible.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: Topic deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: boolean
+              example: true
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/history:
+    get:
+      tags: [History]
+      operationId: getHistoryDetails
+      summary: History collection details
+      description: Get the status and progress of the historical data collection job for the topic.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: History collection job details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryJobDetails'
+        '204':
+          description: No history collection job exists for the topic.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [History]
+      operationId: collectHistory
+      summary: Start history collection
+      description: Start collecting historical mentions for the topic for the given date range.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to]
+              properties:
+                from:
+                  type: string
+                  format: date
+                  description: ISO formatted date from.
+                to:
+                  type: string
+                  format: date
+                  description: ISO formatted date to.
+            example:
+              from: '2025-01-01'
+              to: '2025-02-01'
+      responses:
+        '200':
+          description: History collection started.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/history/stop:
+    post:
+      tags: [History]
+      operationId: stopHistoryCollection
+      summary: Stop history collection
+      description: Stop the running historical data collection job.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: History collection stopped.
+        '400':
+          description: No active history collection job to stop.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Can't find collecting job for the topic
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: List tags
+      description: Returns the collection of tags created in your topic.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      responses:
+        '200':
+          description: Tags in the topic.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+              example:
+                tags:
+                  - id: 1
+                    name: Spam
+                    color: red
+                    note: Special tag for spam mentions
+                  - id: 2
+                    name: News
+                    color: green
+                  - id: 3
+                    name: Social
+                    note: Special tag for mentions from social network
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Tags]
+      operationId: createTag
+      summary: Create tag
+      description: Creates a new tag in the topic.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Unique tag name.
+                note:
+                  type: string
+                  description: Optional tag notes.
+                color:
+                  type: string
+                  maxLength: 50
+                  description: >
+                    Optional tag color. Any string up to 50 characters is accepted; the standard
+                    palette is red, pink, purple, indigo, blue, teal, green, lime, yellow, amber,
+                    orange, gray.
+            example:
+              name: unique_name
+              note: some notes
+              color: red
+      responses:
+        '201':
+          description: Tag created.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '409':
+          description: Tag with the same name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: ALREADY_EXISTS
+                message: Tag already exists
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /spaces:
+    get:
+      tags: [Spaces]
+      operationId: listSpaces
+      summary: List spaces
+      description: List spaces available to the authenticated user.
+      responses:
+        '200':
+          description: Spaces available to the user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  spaces:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+              example:
+                spaces:
+                  - id: 10
+                    name: Main
+                  - id: 20
+                    name: Support
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /spaces/{spaceId}/categories:
+    get:
+      tags: [Spaces]
+      operationId: listSpaceCategories
+      summary: List categories
+      description: List categories configured in the specified space.
+      parameters:
+        - name: spaceId
+          in: path
+          required: true
+          description: ID of the Space.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Categories configured in the space.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+              example:
+                categories:
+                  - id: 1
+                    name: Brands
+                    subCategories:
+                      - id: 11
+                        name: Boss
+                      - id: 12
+                        name: Nike
+                  - id: 2
+                    name: Regions
+                    subCategories:
+                      - id: 21
+                        name: EMEA
+        '404':
+          $ref: '#/components/responses/SpaceNotFound'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/sentiments:
+    get:
+      tags: [Statistics]
+      operationId: getSentimentsStatistics
+      summary: Sentiment
+      description: Distribution of mentions by sentiment.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Sentiment distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sentiments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                sentiments:
+                  - name: Positive
+                    count: 48
+                  - name: Neutral
+                    count: 119
+                  - name: Negative
+                    count: 25
+                totalCount: 192
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/tags:
+    get:
+      tags: [Statistics]
+      operationId: getTagsStatistics
+      summary: Tags
+      description: Distribution of mentions by tags.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: size
+          in: query
+          description: Limits the number of tags returned.
+          schema:
+            type: integer
+            default: 10
+            maximum: 200
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Tags distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                tags:
+                  - name: WOM
+                    count: 249
+                  - name: Topic/Bloggers
+                    count: 115
+                  - name: Topic/Social
+                    count: 64
+                totalCount: 428
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/words:
+    get:
+      tags: [Statistics]
+      operationId: getWordsStatistics
+      summary: Word cloud
+      description: Top words mentioned together with the topic.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: size
+          in: query
+          description: Limits the number of words returned.
+          schema:
+            type: integer
+            default: 25
+            maximum: 200
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Word cloud data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  words:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                words:
+                  - name: fast
+                    count: 73
+                  - name: health
+                    count: 55
+                  - name: apple
+                    count: 12
+                totalCount: 140
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/countries:
+    get:
+      tags: [Statistics]
+      operationId: getCountriesStatistics
+      summary: Countries
+      description: >
+        Distribution of mentions by country, including per-country sentiment, top sources,
+        authors count and engagement.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: size
+          in: query
+          description: Limits the number of countries returned.
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: sourcesSize
+          in: query
+          description: Limits the number of sources returned for each country.
+          schema:
+            type: integer
+            default: 5
+            maximum: 20
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Countries distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  countries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: ISO alpha-2 country code.
+                        count:
+                          type: integer
+                        sentiments:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/NameCount'
+                        sources:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/NameCount'
+                        otherSourcesCount:
+                          type: integer
+                          description: Number of mentions from sources beyond the returned top.
+                        authorsCount:
+                          type: integer
+                        engagement:
+                          type: integer
+                  totalCount:
+                    type: integer
+              example:
+                countries:
+                  - name: US
+                    count: 8812
+                    sentiments:
+                      - name: Neutral
+                        count: 6173
+                      - name: Positive
+                        count: 2063
+                      - name: Negative
+                        count: 576
+                    sources:
+                      - name: youtube.com
+                        count: 4240
+                      - name: facebook.com
+                        count: 238
+                      - name: maps.google.com
+                        count: 135
+                    otherSourcesCount: 4047
+                    authorsCount: 6920
+                    engagement: 20695
+                totalCount: 34083
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/cities:
+    get:
+      tags: [Statistics]
+      operationId: getCitiesStatistics
+      summary: Cities
+      description: Distribution of mentions by city.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: size
+          in: query
+          description: Limits the number of cities returned.
+          schema:
+            type: integer
+            default: 50
+            maximum: 1000
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Cities distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: City identifier.
+                        name:
+                          type: string
+                        count:
+                          type: integer
+                  missingCount:
+                    type: [integer, 'null']
+                    description: Number of mentions without a detected city. May be `null`.
+                  otherCount:
+                    type: integer
+                    description: Number of mentions from cities beyond the returned top.
+                  totalCount:
+                    type: integer
+              example:
+                cities:
+                  - id: R123
+                    name: New York
+                    count: 73
+                  - id: R124
+                    name: London
+                    count: 55
+                missingCount: 10
+                otherCount: 4
+                totalCount: 142
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/regions-sentiments:
+    get:
+      tags: [Statistics]
+      operationId: getRegionsSentimentsStatistics
+      summary: Sentiment by regions
+      description: Distribution of mentions by region with sentiment breakdown.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: size
+          in: query
+          description: Limits the number of regions returned.
+          schema:
+            type: integer
+            default: 5
+            maximum: 100
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Regions with sentiment breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TermWithSentiments'
+                  totalCount:
+                    type: integer
+              example:
+                regions:
+                  - name: New York
+                    count: 73
+                    sentiments:
+                      - name: Positive
+                        count: 13
+                      - name: Neutral
+                        count: 50
+                      - name: Negative
+                        count: 10
+                  - name: London
+                    count: 55
+                    sentiments:
+                      - name: Positive
+                        count: 9
+                      - name: Neutral
+                        count: 41
+                      - name: Negative
+                        count: 5
+                totalCount: 128
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/sources-sentiments:
+    get:
+      tags: [Statistics]
+      operationId: getSourcesSentimentsStatistics
+      summary: Sentiment by sources
+      description: Distribution of mentions by source with sentiment breakdown.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: size
+          in: query
+          description: Limits the number of sources returned.
+          schema:
+            type: integer
+            default: 7
+            maximum: 100
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Sources with sentiment breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TermWithSentiments'
+                  totalCount:
+                    type: integer
+              example:
+                sources:
+                  - name: youscan.io
+                    count: 73
+                    sentiments:
+                      - name: Positive
+                        count: 13
+                      - name: Neutral
+                        count: 50
+                      - name: Negative
+                        count: 10
+                  - name: vk.com
+                    count: 55
+                    sentiments:
+                      - name: Positive
+                        count: 9
+                      - name: Neutral
+                        count: 41
+                      - name: Negative
+                        count: 5
+                totalCount: 128
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/regions-sources-sentiments:
+    get:
+      tags: [Statistics]
+      operationId: getRegionsSourcesSentimentsStatistics
+      summary: Sentiment by sources by regions
+      description: Distribution of mentions by region, broken down by sources with sentiment.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: regionsSize
+          in: query
+          description: Limits the number of regions returned.
+          schema:
+            type: integer
+            default: 5
+            maximum: 100
+        - name: sourcesSize
+          in: query
+          description: Limits the number of sources returned for each region.
+          schema:
+            type: integer
+            default: 7
+            maximum: 100
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Regions with per-source sentiment breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        count:
+                          type: integer
+                        sources:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/TermWithSentiments'
+                        otherSourcesCount:
+                          type: integer
+                  otherRegionsCount:
+                    type: integer
+                  totalCount:
+                    type: integer
+              example:
+                regions:
+                  - name: New York
+                    count: 250
+                    sources:
+                      - name: youscan.io
+                        count: 73
+                        sentiments:
+                          - name: Positive
+                            count: 13
+                          - name: Neutral
+                            count: 50
+                          - name: Negative
+                            count: 10
+                      - name: vk.com
+                        count: 55
+                        sentiments:
+                          - name: Positive
+                            count: 9
+                          - name: Neutral
+                            count: 41
+                          - name: Negative
+                            count: 5
+                otherRegionsCount: 12
+                totalCount: 400
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/histogram:
+    get:
+      tags: [Statistics]
+      operationId: getHistogramStatistics
+      summary: Histogram
+      description: >
+        Mentions count, authors count, engagement, and optionally sentiment per date interval
+        for a period. When `interval` is `day`, the requested period must be less than 3 months.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: interval
+          in: query
+          description: Histogram interval.
+          schema:
+            type: string
+            enum: [hour, day, week, month, quarter, year]
+            default: day
+        - name: sentiment
+          in: query
+          description: Whether to include sentiment distribution.
+          schema:
+            type: boolean
+            default: false
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Histogram data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                          format: date-time
+                          description: Start of the interval.
+                        count:
+                          type: integer
+                        authorsCount:
+                          type: integer
+                        engagement:
+                          type: integer
+                        sentiment:
+                          type: object
+                          description: Present when the `sentiment` parameter is `true`.
+                          properties:
+                            positive:
+                              type: integer
+                            neutral:
+                              type: integer
+                            negative:
+                              type: integer
+                  authorsCount:
+                    type: integer
+                    description: Total unique authors for the period.
+                  engagement:
+                    type: integer
+                    description: Total engagement for the period.
+                  totalCount:
+                    type: integer
+              example:
+                dates:
+                  - key: '2022-05-21T00:00:00+00:00'
+                    count: 304
+                    authorsCount: 207
+                    engagement: 7907
+                    sentiment:
+                      neutral: 239
+                      positive: 61
+                      negative: 4
+                  - key: '2022-05-22T00:00:00+00:00'
+                    count: 208
+                    authorsCount: 153
+                    engagement: 7272
+                    sentiment:
+                      neutral: 185
+                      positive: 21
+                      negative: 2
+                authorsCount: 1309
+                engagement: 45878
+                totalCount: 2195
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/genders:
+    get:
+      tags: [Statistics]
+      operationId: getGendersStatistics
+      summary: Genders
+      description: Distribution of mentions by author gender.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Genders distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  genders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                genders:
+                  - name: male
+                    count: 26
+                  - name: unknown
+                    count: 16
+                  - name: community
+                    count: 4
+                  - name: female
+                    count: 4
+                totalCount: 50
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/ages:
+    get:
+      tags: [Statistics]
+      operationId: getAgesStatistics
+      summary: Ages
+      description: Distribution of mentions by author age.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Ages distribution.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NameCount'
+                  totalCount:
+                    type: integer
+              example:
+                ages:
+                  - name: '19'
+                    count: 2
+                  - name: '35'
+                    count: 2
+                  - name: '22'
+                    count: 1
+                totalCount: 5
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/links:
+    get:
+      tags: [Statistics]
+      operationId: getLinksStatistics
+      summary: Links
+      description: Get statistics for top links and hosts (domains).
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - name: size
+          in: query
+          description: Limits the number of links and hosts returned.
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: sort
+          in: query
+          description: Sorting criteria.
+          schema:
+            type: string
+            enum: [count, totalEngagement, avgEngagement]
+            default: count
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Top links and hosts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LinkItem'
+                  hosts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LinkItem'
+                  totalCount:
+                    type: integer
+              example:
+                totalCount: 87
+                links:
+                  - totalEngagement: 49
+                    avgEngagement: 8.17
+                    key: telegra.ph/how-to-find-youscan-office-02-15
+                    count: 6
+                    sentiment:
+                      values:
+                        - key: neutral
+                          count: 6
+                      otherCount: 0
+                hosts:
+                  - totalEngagement: 49
+                    avgEngagement: 8.17
+                    key: telegra.ph
+                    count: 6
+                    sentiment:
+                      values:
+                        - key: neutral
+                          count: 6
+                      otherCount: 0
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/statistics/metrics:
+    get:
+      tags: [Statistics]
+      operationId: getMetricsStatistics
+      summary: Engagement metrics
+      description: Summary engagement metrics for mentions matching the filters.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/StatisticsFrom'
+        - $ref: '#/components/parameters/StatisticsTo'
+        - $ref: '#/components/parameters/StatisticsCountry'
+        - $ref: '#/components/parameters/StatisticsExcludeCountry'
+        - $ref: '#/components/parameters/StatisticsSourceTypes'
+        - $ref: '#/components/parameters/StatisticsExcludeSourceTypes'
+        - $ref: '#/components/parameters/StatisticsSources'
+        - $ref: '#/components/parameters/StatisticsExcludeSources'
+        - $ref: '#/components/parameters/StatisticsTags'
+        - $ref: '#/components/parameters/StatisticsExcludeTag'
+      responses:
+        '200':
+          description: Summary metrics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalEngagement:
+                    type: integer
+                  authorsCount:
+                    type: integer
+                  sourcesCount:
+                    type: integer
+                  viewsCount:
+                    type: integer
+                  subscribersCount:
+                    type: integer
+                  totalCount:
+                    type: integer
+              example:
+                totalEngagement: 45878
+                authorsCount: 1309
+                sourcesCount: 87
+                viewsCount: 120034
+                subscribersCount: 2400500
+                totalCount: 2195
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/mentions:
+    get:
+      tags: [Mentions]
+      operationId: listMentions
+      summary: List mentions
+      description: |
+        Use this action to retrieve mentions matching criteria.
+
+        This endpoint is rate limited: no more than 10 requests per 10 seconds and no more than
+        5 concurrent requests per user. Requests beyond those limits are rejected with a 429 status code.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - name: from
+          in: query
+          description: >
+            Filter mentions published on or after this date. Format - `yyyy-MM-ddThh:mm:ss`,
+            with an optional UTC offset. Without an offset the value is interpreted in the
+            `timeZone` parameter's zone, which defaults to the API key owner's time zone
+            (see *Dates and time zones* in the Mentions section). Default - 6 days before today.
+          schema:
+            type: string
+            example: '2018-06-01T03:30Z'
+        - name: to
+          in: query
+          description: >
+            Filter mentions published till the `to` date, **inclusive**: the effective upper
+            bound is `to` plus one day. `to=2018-06-08` includes the whole of June 8;
+            `to=2018-06-08T04:20Z` includes mentions up to (but excluding) June 9, 04:20Z.
+            Format and time zone interpretation are the same as for `from`. Default - today.
+          schema:
+            type: string
+            example: '2018-06-08T04:20Z'
+        - name: addedFrom
+          in: query
+          description: >
+            Filter mentions that were added to the topic after this date. Format -
+            `yyyy-MM-ddThh:mm:ss`. Unlike `published`, this is the moment YouScan saved the
+            mention — useful for catching mentions collected with a delay. Note: unlike `to`,
+            `addedTo` is not extended by a day.
+          schema:
+            type: string
+        - name: addedTo
+          in: query
+          description: Filter mentions that were added to the topic before this date. Format - `yyyy-MM-ddThh:mm:ss`.
+          schema:
+            type: string
+        - name: sinceSeq
+          in: query
+          description: >
+            Cursor filter: return only mentions with `seq` greater than this value (exclusive).
+            Combine with `orderBy=seqAsc` and pass the highest `seq` from the previous page —
+            see *How to effectively retrieve large sets of mentions* for the full loop.
+          schema:
+            type: integer
+            format: int64
+        - name: sentiment
+          in: query
+          description: Filter mentions matching the specified sentiment. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [positive, neutral, negative]
+        - name: excludeSentiment
+          in: query
+          description: Exclude mentions matching the specified sentiment. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [positive, neutral, negative]
+        - name: engagementFrom
+          in: query
+          description: Filter mentions with engagement count greater than or equal to this value.
+          schema:
+            type: integer
+        - name: engagementTo
+          in: query
+          description: Filter mentions with engagement count less than or equal to this value.
+          schema:
+            type: integer
+        - name: engagementCollectedFrom
+          in: query
+          description: Filter mentions where engagement data was collected after this date. Format - `yyyy-MM-ddThh:mm:ss`.
+          schema:
+            type: string
+        - name: engagementCollectedTo
+          in: query
+          description: Filter mentions where engagement data was collected before this date. Format - `yyyy-MM-ddThh:mm:ss`.
+          schema:
+            type: string
+        - name: sources
+          in: query
+          description: Filter mentions by source. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              type: string
+          example: [youscan.io, telegram.me]
+        - name: excludeSources
+          in: query
+          description: Exclude mentions by source. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              type: string
+        - name: sourceTypes
+          in: query
+          description: Filter mentions by source type. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SourceTypeFilter'
+        - name: excludeSourceTypes
+          in: query
+          description: Exclude mentions by source type. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SourceTypeFilter'
+        - name: postTypes
+          in: query
+          description: Filter mentions by post type. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/PostType'
+        - name: excludePostTypes
+          in: query
+          description: Exclude mentions by post type. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/PostType'
+        - name: tags
+          in: query
+          description: >
+            Filter mentions by tag names. Multiple values are supported.
+            Returns a validation error if a tag with the given name does not exist in the topic.
+          schema:
+            type: array
+            items:
+              type: string
+        - name: excludeTags
+          in: query
+          description: Exclude mentions by tag names. Multiple values are supported.
+          schema:
+            type: array
+            items:
+              type: string
+        - name: autoCategories
+          in: query
+          description: >
+            Filter mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/).
+            Multiple values are supported.
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [wom, commercial, news, recipe]
+        - name: excludeAutoCategories
+          in: query
+          description: >
+            Exclude mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/).
+            Multiple values are supported.
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [wom, commercial, news, recipe]
+        - name: starred
+          in: query
+          description: Use `true` to get only starred mentions.
+          schema:
+            type: boolean
+        - name: tagged
+          in: query
+          description: >
+            Use `true` to get mentions containing any tag. Use `false` to get mentions without any tags.
+            Omit the parameter to get all mentions regardless of tags.
+          schema:
+            type: boolean
+        - name: processed
+          in: query
+          description: >
+            Use `true` to get processed mentions. Use `false` to get unprocessed mentions.
+            Omit the parameter to get all mentions regardless of processed status.
+          schema:
+            type: boolean
+        - name: deleted
+          in: query
+          description: Use `true` to get mentions that were moved to Bin.
+          schema:
+            type: boolean
+            default: false
+        - name: spam
+          in: query
+          description: Use `true` to get mentions that were marked as spam.
+          schema:
+            type: boolean
+            default: false
+        - name: textQuery
+          in: query
+          description: Additionally filter mentions by a text query using YouScan query syntax.
+          schema:
+            type: string
+        - name: dedup
+          in: query
+          description: Use `true` to group near-duplicate mentions by text and return only one mention per group.
+          schema:
+            type: boolean
+            default: false
+        - name: htmlSanitize
+          in: query
+          description: >
+            Whether to sanitize mention text to be consumed as HTML.
+            Use `false` to get raw unescaped text.
+          schema:
+            type: boolean
+            default: true
+        - name: timeZone
+          in: query
+          description: >
+            IANA time zone identifier (e.g. `Europe/Kyiv`) used to interpret date parameters
+            that have no explicit offset. Defaults to the API key owner's time zone. To
+            reproduce the numbers a platform user sees in the UI, pass that user's time zone
+            here.
+          schema:
+            type: string
+        - name: size
+          in: query
+          description: >
+            Limits the number of mentions per page. Default - 10, maximum - 1000. The
+            response `total` field tells how many mentions match in total — if it exceeds
+            `size`, paginate with the `sinceSeq` cursor.
+          schema:
+            type: integer
+            default: 10
+            maximum: 1000
+        - name: skip
+          in: query
+          description: >
+            Number of mentions to skip. Used for paging; must be less than 10000. To page
+            deeper than that, use the `sinceSeq` cursor instead.
+          schema:
+            type: integer
+            maximum: 9999
+        - name: orderBy
+          in: query
+          description: Sorting field.
+          schema:
+            type: string
+            enum: [published, publishedAsc, seqAsc, engagement]
+            default: published
+      responses:
+        '200':
+          description: Mentions matching criteria.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Total number of mentions matching criteria.
+                  lastSeq:
+                    type: integer
+                    format: int64
+                    description: >
+                      The highest mention sequence number in the whole topic — not of this
+                      page, so don't use it as the `sinceSeq` paging cursor.
+                  mentions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Mention'
+              example:
+                lastSeq: 298761
+                total: 3785
+                mentions:
+                  - id: '241032672'
+                    seq: 3571010
+                    published: '2019-11-06T02:13:03+00:00'
+                    addedAt: '2019-11-06T14:04:59.9506137Z'
+                    url: https://youscan.io/blog/saas-advisor
+                    title: Saas Advisor Named YouScan a Visual Analysis Category Winner in Martech-Challenges
+                    text: YouScan's recognition as a Visual Analysis winner is a result of our hard work on the system's Visual Insights functionality.
+                    fullText: YouScan's recognition as a Visual Analysis winner is a result of our hard work on the system's Visual Insights functionality.
+                    imageUrl: https://api-site.youscan.io/assets/visual-analysis.png
+                    source: youscan.io
+                    author:
+                      profileId: '1139551113605238784'
+                      name: Zhanna Isaieva
+                      nickname: ZhannaIsaieva
+                      avatarUrl: https://api-site.youscan.io/assets/youscan-team-photos/youscan-zhanna-isaeva.png
+                      url: https://youscan.io/blog/saas-advisor
+                      gender: female
+                    publicationPlace:
+                      name: YouScan Blog
+                      nickname: youscan_blog
+                      url: https://youscan.io/blog
+                    sentiment: positive
+                    sourceType: blog
+                    language: eng
+                    imageActivities: [auto racing]
+                    imageBrands: [youscan]
+                    imageColors: ['#eeeeee']
+                    imageObjects: [computer]
+                    imagePeople: [television presenter]
+                    imageScenes: [scene]
+                    imageTexts: [SALE 50% OFF]
+                    postType: post
+                    contentTypes: [text, image]
+                    tags: [awards, recognition]
+                    rating: null
+                    autoCategories: [wom]
+                    subjects: [technology, marketing]
+                    starred: false
+                    processed: false
+                    engagement:
+                      likes: 15
+                      comments: 3
+                      reposts: 2
+                      engagement: 20
+                    postId: blog-post-123
+                    parentPostId: null
+                    discussionId: blog-post-123
+                    country: ua
+                    region: Kyiv
+                    city: Kyiv
+                    note: Great recognition for our team
+                    aspects: [quality_positive]
+                    sentimentAspects:
+                      - aspect: quality
+                        sentiment: positive
+                    potentialReach: 100
+                    authorJobs: [marketing]
+                    authorInterests: [technology]
+                    authorInterestCategories: [tech]
+                    customTags: [company_news]
+                    categories:
+                      - id: 1
+                        name: Brands
+                        subCategories:
+                          - id: 11
+                            name: YouScan
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '429':
+          description: Rate limit exceeded (10 requests per 10 seconds, 5 concurrent requests).
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Please enhance your calm
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/get-mentions:
+    get:
+      tags: [Mentions]
+      operationId: getMentionsByIds
+      summary: Get mentions by IDs
+      description: Retrieve specific mentions by their IDs. Maximum 500 IDs per request.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - name: ids
+          in: query
+          required: true
+          description: Mention IDs. Multiple values are supported. Maximum 500 IDs per request.
+          schema:
+            type: array
+            maxItems: 500
+            items:
+              type: integer
+              format: int64
+        - name: timeZone
+          in: query
+          description: IANA time zone identifier used to convert mention dates in the response. Defaults to the API key owner's time zone.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Requested mentions.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mentions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Mention'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Mentions]
+      operationId: getMentionsByIdsPost
+      summary: Get mentions by IDs (POST)
+      description: >
+        Same as the GET variant, but accepts the IDs in the request body — useful when the list
+        of IDs is too long for a URL. Maximum 500 IDs per request.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  maxItems: 500
+                  items:
+                    type: integer
+                    format: int64
+                timeZone:
+                  type: string
+                  description: IANA time zone identifier used to convert mention dates in the response. Defaults to the API key owner's time zone.
+            example:
+              ids: [241032672, 241032673]
+      responses:
+        '200':
+          description: Requested mentions.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mentions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Mention'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/mentions/bulkupdate:
+    post:
+      tags: [Mentions]
+      operationId: bulkUpdateMentions
+      summary: Bulk update mentions
+      description: >
+        Update mentions' `tags` and `sentiment`, mark them as spam, or remove them.
+        Maximum 100 mentions per request.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mentions]
+              properties:
+                mentions:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  description: Mentions to be updated.
+                  items:
+                    type: object
+                    required: [id]
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        description: ID of the mention.
+                      tags:
+                        type: array
+                        items:
+                          type: string
+                        description: List of tags to set. Will overwrite existing tags.
+                      sentiment:
+                        type: string
+                        enum: [positive, neutral, negative]
+                        description: Sentiment for the mention.
+                      spam:
+                        type: boolean
+                        description: Value indicating whether the mention is marked as spam.
+                      deleted:
+                        type: boolean
+                        description: Value indicating whether the mention is deleted (moved to Bin).
+            example:
+              mentions:
+                - id: 1
+                  tags: [tag1, tag2]
+                  sentiment: neutral
+                  spam: false
+                  deleted: false
+      responses:
+        '200':
+          description: Mentions updated.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/imports:
+    post:
+      tags: [Data Import]
+      operationId: createImport
+      summary: Create import
+      description: |
+        Create a new data import job to import mentions into a topic.
+
+        Maximum 100,000 mentions per import.
+        If items contain a large amount of data (such as lengthy text content), you may receive
+        a 413 (Content Too Large) error. In this case, try splitting your batch into smaller ones.
+
+        **Each mention must have:**
+        - A valid URL (required) — must be an absolute HTTP or HTTPS URL. If you want to import an item
+          without a URL, you should still create a fake unique-per-topic URL (https://mysite.com/1)
+        - A published date (required) — cannot be empty
+        - At least one content field: title, text, or imageUrl
+
+        **Processing:**
+        - Mentions are processed asynchronously after the import is created
+        - Use the Get Import Status endpoint to track progress
+        - Failed mentions can be retrieved using the Get Import Errors endpoint
+        - Duplicate mentions (same URL) will be rejected with error code "Duplicate"
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mentions]
+              properties:
+                name:
+                  type: string
+                  description: Name for this import batch.
+                mentions:
+                  type: array
+                  minItems: 1
+                  maxItems: 100000
+                  description: List of mentions to import.
+                  items:
+                    $ref: '#/components/schemas/ImportMention'
+            example:
+              name: Q4 2024 Customer Feedback
+              mentions:
+                - url: https://example.com/post/123
+                  published: '2024-12-15T10:30:00Z'
+                  text: Great product! I love using it every day.
+                  title: Customer Review
+                  postId: post-123
+                  parentPostId: thread-456
+                  discussionId: discussion-789
+                  originId: origin-000
+                  source: example.com
+                  postType: Post
+                  sourceType: Reviews
+                  contentTypes: [Text, Image]
+                  tagIds: [1, 2]
+                  author:
+                    profileId: user-123
+                    name: John Doe
+                    nickname: johndoe
+                    description: Tech enthusiast and product reviewer
+                    url: https://example.com/users/johndoe
+                    avatarUrl: https://example.com/avatars/johndoe.jpg
+                    subscribers: 1500
+                    gender: M
+                    isVerified: true
+                    geo:
+                      countryCode: US
+                      country: United States
+                      city: New York
+                  channel:
+                    profileId: channel-456
+                    name: Product Reviews
+                    nickname: productreviews
+                    url: https://example.com/channels/productreviews
+                    avatarUrl: https://example.com/avatars/channel.jpg
+                    subscribers: 50000
+                    isVerified: true
+                  engagement:
+                    likes: 42
+                    comments: 5
+                    shares: 3
+                    views: 1250
+                    reactions: 50
+                    reach: 5000
+                    impressions: 7500
+                    saves: 723
+                  mentionGeo:
+                    countryCode: US
+                    country: United States
+                    city: San Francisco
+                  imageUrl: https://example.com/images/product.jpg
+                  rating: 4.5
+                  language: eng
+      responses:
+        '201':
+          description: Import created.
+          headers:
+            Location:
+              description: URL of the created import.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  importId:
+                    type: integer
+                    description: Unique identifier for this import.
+                  name:
+                    type: [string, 'null']
+                    description: Name of the import.
+                  totalReceived:
+                    type: integer
+                    description: Number of mentions received.
+                  status:
+                    type: string
+                    description: Current status of the import.
+              example:
+                importId: 12345678
+                name: Q4 2024 Customer Feedback
+                totalReceived: 1
+                status: pending
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '413':
+          description: Request payload is too large. Split your batch into smaller ones.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      tags: [Data Import]
+      operationId: listImports
+      summary: List imports
+      description: Get a list of all imports for a topic, optionally filtered by status.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - name: status
+          in: query
+          description: Filter by status.
+          schema:
+            type: string
+            enum: [Pending, Processing, Completed, Failed, Aborted]
+      responses:
+        '200':
+          description: Imports of the topic.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImportStatus'
+              example:
+                imports:
+                  - importId: 12345678
+                    name: Q4 2024 Customer Feedback
+                    totalMentions: 100
+                    savedCount: 100
+                    failedCount: 0
+                    status: Completed
+                    createdAt: '2024-12-15T10:00:00Z'
+                    startedAt: '2024-12-15T10:01:00Z'
+                    completedAt: '2024-12-15T10:15:00Z'
+                    lastError: null
+                  - importId: 12345679
+                    name: LinkedIn Campaign Data
+                    totalMentions: 50
+                    savedCount: 25
+                    failedCount: 0
+                    status: Processing
+                    createdAt: '2024-12-15T11:00:00Z'
+                    startedAt: '2024-12-15T11:01:00Z'
+                    completedAt: null
+                    lastError: null
+
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/TopicNotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/imports/{importId}:
+    get:
+      tags: [Data Import]
+      operationId: getImportStatus
+      summary: Get import status
+      description: Get the current status of a data import job.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/ImportId'
+      responses:
+        '200':
+          description: Import status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportStatus'
+              example:
+                importId: 12345678
+                name: Q4 2024 Customer Feedback
+                totalMentions: 100
+                savedCount: 85
+                failedCount: 5
+                status: Processing
+                createdAt: '2024-12-15T10:00:00Z'
+                startedAt: '2024-12-15T10:01:00Z'
+                completedAt: null
+                lastError: null
+        '404':
+          description: Import not found, or the topic isn't found or accessible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: RESOURCE_NOT_FOUND
+                message: Import not found
+                resourceType: Import
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/imports/{importId}/abort:
+    post:
+      tags: [Data Import]
+      operationId: abortImport
+      summary: Abort import
+      description: Abort a running import job. Only imports in "Pending" or "Processing" status can be aborted.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/ImportId'
+      responses:
+        '200':
+          description: Abort requested.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  importId:
+                    type: integer
+                    description: Import identifier.
+                  status:
+                    type: string
+                    description: Current status message.
+              example:
+                importId: 12345678
+                status: Aborting in progress
+        '400':
+          description: Import cannot be aborted in its current status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: IMPORT_NOT_ABORTABLE
+                message: Import can only be aborted when it is in Pending or Processing status
+        '404':
+          description: Import not found, or the topic isn't found or accessible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: RESOURCE_NOT_FOUND
+                message: Import not found
+                resourceType: Import
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /topics/{topicId}/imports/{importId}/errors:
+    get:
+      tags: [Data Import]
+      operationId: getImportErrors
+      summary: Get import errors
+      description: Get a list of errors that occurred during the import process.
+      parameters:
+        - $ref: '#/components/parameters/TopicId'
+        - $ref: '#/components/parameters/ImportId'
+      responses:
+        '200':
+          description: Import errors.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImportError'
+              example:
+                errors:
+                  - permaLink: https://example.com/post/1
+                    error: 'Save failed with status: Duplicate'
+                    attemptCount: 1
+                    createdAt: '2024-12-15T10:05:00Z'
+        '404':
+          description: Import not found, or the topic isn't found or accessible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                errorCode: RESOURCE_NOT_FOUND
+                message: Import not found
+                resourceType: Import
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /your-webhook-endpoint:
+    post:
+      tags: [Webhook]
+      operationId: mentionFoundWebhook
+      summary: Mention found
+      security: []
+      servers:
+        - url: https://your-app.example
+          description: The HTTPS endpoint you register in the topic's Settings → Integrations.
+      description: |
+        Sent by YouScan to the URL you configured, every time a new mention is found and
+        saved to the topic. Fields with `null` values are omitted from the payload.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookMention'
+            example:
+              topicId: 1
+              topicName: YouScan
+              themeId: 1
+              themeName: YouScan
+              mentionId: 241032672
+              url: https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/
+              published: '2021-08-09T14:13:03Z'
+              addedAt: '2021-08-09T16:04:59.9506137Z'
+              sourceName: youscan.io
+              title: Saas Advisor Named <b>YouScan</b> a Visual Analysis Category Winner in Martech-Challenges
+              text: The second year in a row, <b>YouScan</b> is named the Best Social Media Monitoring Software in the 2021 MarTech Breakthrough Awards.
+              imageUrl: https://api-site.youscan.io/assets/visual-analysis.png
+              author:
+                name: Elena Teselko
+                url: https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/
+                avatarUrl: https://assets.youscan.io/assets/main/0625ed74b3a8-512.jpeg
+              sentiment: positive
+              postType: post
+              resourceType: blog
+              spam: false
+              language: eng
+              country: ua
+              region: Kyiv
+              city: Kyiv
+              tags: [Awards]
+              contentTypes: [text, image]
+              likes: 12
+              comments: 3
+              engagement: 15
+              potentialReach: 100
+              postId: blog-post-123
+              discussionId: blog-post-123
+      responses:
+        '200':
+          description: Return any 2xx status code to acknowledge receipt of the mention.
+        '4XX':
+          description: |
+            YouScan treats any non-2xx response — or no response within 4 minutes — as a
+            failed delivery.
+
+components:
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication. The recommended way to authenticate requests.
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: apiKey
+      description: API key as a query parameter. For testing purposes only.
+
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+    ImportId:
+      name: importId
+      in: path
+      required: true
+      description: ID of the Import.
+      schema:
+        type: integer
+    StatisticsFrom:
+      name: from
+      in: query
+      description: >
+        ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts
+        in the API key owner's time zone (see *Dates and time zones* in the Mentions section).
+        Default - 6 days before today.
+      schema:
+        type: string
+        format: date
+        example: '2024-01-01'
+    StatisticsTo:
+      name: to
+      in: query
+      description: >
+        ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's
+        time zone (see *Dates and time zones* in the Mentions section). Default - today.
+      schema:
+        type: string
+        format: date
+        example: '2024-12-31'
+    StatisticsCountry:
+      name: country
+      in: query
+      description: Filter mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+      example: [us, ua]
+    StatisticsExcludeCountry:
+      name: excludeCountry
+      in: query
+      description: Exclude mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+    StatisticsSourceTypes:
+      name: sourceTypes
+      in: query
+      description: Filter mentions by source type. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/SourceTypeFilter'
+    StatisticsExcludeSourceTypes:
+      name: excludeSourceTypes
+      in: query
+      description: Exclude mentions by source type. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/SourceTypeFilter'
+    StatisticsSources:
+      name: sources
+      in: query
+      description: Filter mentions by source. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+      example: [telegram.me, youscan.io]
+    StatisticsExcludeSources:
+      name: excludeSources
+      in: query
+      description: Exclude mentions by source. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+    StatisticsTags:
+      name: tags
+      in: query
+      description: Filter mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: integer
+    StatisticsExcludeTag:
+      name: excludeTag
+      in: query
+      description: Exclude mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: integer
+
+  responses:
+    Unauthorized:
+      description: The API key is missing or invalid.
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: "'TextQuery' should not be empty."
+            errors:
+              - field: TextQuery
+                errorCode: notempty_error
+                message: "'TextQuery' should not be empty."
+    HistoryLimitExceeded:
+      description: Too many mentions matching the query for your subscription plan.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            errorCode: HISTORY_LIMIT_EXCEEDED
+            message: Too many mentions matching query. Please refine your search query or ask support for help
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
+    SpaceNotFound:
+      description: Space not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            errorCode: RESOURCE_NOT_FOUND
+            message: Space not found
+            resourceType: Space
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: >
+            Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource
+            (e.g. "Import", "Space").
+
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+
+    TopicQuery:
+      type: object
+      description: >
+        Topic query parameters. Either `textQuery` or `viQuery` must be set.
+      properties:
+        textQuery:
+          type: [string, 'null']
+          description: Text query using YouScan query syntax.
+        viQuery:
+          type: [string, 'null']
+          description: >
+            VI query using YouScan query syntax (requires VI subscription).
+            Used to match mentions by logos, text, and objects on images.
+        filter:
+          oneOf:
+            - $ref: '#/components/schemas/CustomFilter'
+            - type: 'null'
+          description: Optional filter criteria (see the filter structure description in the Topics section).
+
+    CustomFilter:
+      type: object
+      properties:
+        op:
+          type: string
+          enum: [and, or]
+          description: How the listed filters are combined.
+        filters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterItem'
+
+    FilterItem:
+      type: object
+      required: [fieldName, op, value]
+      properties:
+        fieldName:
+          type: string
+          description: The field to filter on.
+          enum: [country, countryGroup, language, source, sourceType, postType, contentType, authorAge, authorSubscribers, gender]
+        op:
+          type: string
+          description: The operation to perform.
+          enum: [oneOf, notOneOf, greaterOrEqual, lessOrEqual]
+        value:
+          type: string
+          description: JSON-encoded array of values, e.g. `["ua"]`.
+      example:
+        fieldName: country
+        op: notOneOf
+        value: '["ua"]'
+
+    TopicInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Topic ID.
+        name:
+          type: string
+          description: Topic name.
+        topicQuery:
+          $ref: '#/components/schemas/TopicQuery'
+        sampling:
+          type: [number, 'null']
+          description: Sampling rate, if sampling is enabled for the topic.
+
+    HistoryJobDetails:
+      type: object
+      properties:
+        topicId:
+          type: integer
+          description: Topic ID.
+        status:
+          type: string
+          enum: [collecting, failed, failedComplexQuery, completed, aborted]
+          description: Job status.
+        started:
+          type: [string, 'null']
+          format: date-time
+          description: Date and time when the job started.
+        ended:
+          type: [string, 'null']
+          format: date-time
+          description: Date and time when the job finished.
+        from:
+          type: string
+          format: date-time
+          description: Date from which data is collected.
+        to:
+          type: string
+          format: date-time
+          description: Date until which data is collected.
+        query:
+          type: string
+          description: Search query used for historical data collection.
+        processedTo:
+          type: [string, 'null']
+          format: date-time
+          description: Date until which data is already collected.
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Percentage completed.
+        collected:
+          type: integer
+          description: Number of mentions processed.
+        saved:
+          type: integer
+          description: Number of mentions saved to the topic.
+        duplicates:
+          type: integer
+          description: Number of duplicate mentions skipped.
+        skipped:
+          type: integer
+          description: Number of mentions skipped.
+        invalid:
+          type: integer
+          description: Number of invalid mentions.
+        lastError:
+          type: [string, 'null']
+          description: Last error message, if the job failed.
+      example:
+        topicId: 123
+        status: collecting
+        started: '2021-02-01T13:01:00Z'
+        from: '2021-01-01T00:00:00Z'
+        to: '2021-02-01T00:00:00Z'
+        query: Tesla or SpaceX
+        processedTo: '2021-01-15T00:00:00Z'
+        progress: 15
+        collected: 1024
+        saved: 900
+        duplicates: 100
+        skipped: 20
+        invalid: 4
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Tag ID.
+        name:
+          type: string
+          description: Tag name, unique within the topic.
+        color:
+          type: [string, 'null']
+          description: Tag color.
+        note:
+          type: [string, 'null']
+          description: Tag notes.
+
+    Space:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Space ID.
+        name:
+          type: string
+          description: Space name.
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Category ID.
+        name:
+          type: string
+          description: Category name.
+        subCategories:
+          type: array
+          description: Configured (or, in mention responses, assigned) subcategories.
+          items:
+            $ref: '#/components/schemas/SubCategory'
+
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
+
+    NameCount:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the bucket.
+        count:
+          type: integer
+          description: Number of mentions in the bucket.
+
+    TermWithSentiments:
+      type: object
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+        sentiments:
+          type: array
+          description: Distribution by sentiment.
+          items:
+            $ref: '#/components/schemas/NameCount'
+
+    LinkItem:
+      type: object
+      properties:
+        key:
+          type: string
+          description: The link, or the root domain for hosts.
+        count:
+          type: integer
+          description: Number of mentions containing the link.
+        totalEngagement:
+          type: integer
+        avgEngagement:
+          type: number
+          description: Average engagement per mention. Omitted when the link has no engagement.
+        sentiment:
+          type: object
+          description: Distribution by sentiment.
+          properties:
+            values:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    enum: [positive, neutral, negative, undefined]
+                  count:
+                    type: integer
+            otherCount:
+              type: integer
+
+    SourceTypeFilter:
+      type: string
+      enum: [blog, forum, news, social, reviews, messenger]
+
+    PostType:
+      type: string
+      enum: [post, repost, extendedRepost, comment]
+
+    Sentiment:
+      type: string
+      enum: [positive, neutral, negative, undefined]
+
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+        - instagramReels
+        - instagramStories
+        - pinterestStoryPins
+        - youTubeShorts
+        - facebookReels
+        - facebookStories
+        - tikTokPhoto
+        - twitterNote
+        - youTubeLive
+        - facebookLive
+        - twitchLive
+        - twitterCommunityNote
+
+    MentionProfile:
+      type: object
+      properties:
+        profileId:
+          type: [string, 'null']
+          description: Profile ID in the source system.
+        url:
+          type: [string, 'null']
+          description: Link to the profile.
+        name:
+          type: [string, 'null']
+          description: Display name.
+        nickname:
+          type: [string, 'null']
+          description: Username/handle.
+        bio:
+          type: [string, 'null']
+          description: Profile description. Available for authors only.
+        avatarUrl:
+          type: [string, 'null']
+          description: URL to the avatar image.
+        subscribers:
+          type: [integer, 'null']
+          description: Number of friends and/or followers.
+        gender:
+          type: string
+          enum: [unknown, community, male, female]
+        age:
+          type: [integer, 'null']
+          description: Author age. Available for authors only.
+        jobs:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Author job categories. Requires the Audience Insights addon.
+        interests:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Author interests. Requires the Audience Insights addon.
+        interestCategories:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Author interest categories. Requires the Audience Insights addon.
+
+    MentionEngagement:
+      type: object
+      properties:
+        likes:
+          type: [integer, 'null']
+        dislikes:
+          type: [integer, 'null']
+        comments:
+          type: [integer, 'null']
+        reposts:
+          type: [integer, 'null']
+        views:
+          type: [integer, 'null']
+        reach:
+          type: [integer, 'null']
+        saves:
+          type: [integer, 'null']
+        impressions:
+          type: [integer, 'null']
+        engagement:
+          type: [integer, 'null']
+          description: Sum of likes, dislikes, comments and reposts.
+        reactions:
+          oneOf:
+            - $ref: '#/components/schemas/Reactions'
+            - type: 'null'
+        dateCollected:
+          type: [string, 'null']
+          format: date-time
+          description: When the engagement data was last collected.
+
+    Reactions:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of reactions.
+        angry:
+          type: [integer, 'null']
+        haha:
+          type: [integer, 'null']
+        love:
+          type: [integer, 'null']
+        sad:
+          type: [integer, 'null']
+        wow:
+          type: [integer, 'null']
+        care:
+          type: [integer, 'null']
+
+    Mention:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Mention identifier that can be used to label a particular mention.
+        seq:
+          type: integer
+          format: int64
+          description: >
+            Mention sequence number. Useful for paging, when the `sinceSeq` filter and
+            `seqAsc` sort order are used.
+        published:
+          type: string
+          format: date-time
+          description: Date and time when the mention was published, in ISO 8601 format.
+        addedAt:
+          type: string
+          format: date-time
+          description: Date and time when the mention was saved to the topic.
+        url:
+          type: [string, 'null']
+          description: Mention URL.
+        title:
+          type: [string, 'null']
+          description: Mention's title. For example, for a comment it may contain the parent post's snippet.
+        text:
+          type: [string, 'null']
+          description: Snippet of the mention content.
+        fullText:
+          type: [string, 'null']
+          description: Full text of the mention.
+        imageUrl:
+          type: [string, 'null']
+          description: Image URL.
+        images:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Array of image URLs.
+        source:
+          type: string
+          description: Mention's source (domain).
+        author:
+          oneOf:
+            - $ref: '#/components/schemas/MentionProfile'
+            - type: 'null'
+          description: Mention author.
+        publicationPlace:
+          oneOf:
+            - $ref: '#/components/schemas/MentionProfile'
+            - type: 'null'
+          description: Place where the mention was published (e.g. a group or channel).
+        sentiment:
+          $ref: '#/components/schemas/Sentiment'
+        sourceType:
+          type: string
+          enum: [social, blog, forum, messenger, news, reviews, other]
+        resourceType:
+          type: [string, 'null']
+          deprecated: true
+          description: Duplicate of `sourceType`. Use `sourceType` instead.
+        language:
+          type: [string, 'null']
+          description: 3-letter ISO 639 language code.
+        imageActivities:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Activities detected on the image. Available for customers with the Visual Insights option enabled.
+        imageBrands:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Brands detected on the image. Available for customers with the Visual Insights option enabled.
+        imageColors:
+          type: [array, 'null']
+          items:
+            type: string
+          description: HEX color codes detected on the image. Available for customers with the Visual Insights option enabled.
+        imageObjects:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Objects detected on the image. Available for customers with the Visual Insights option enabled.
+        imagePeople:
+          type: [array, 'null']
+          items:
+            type: string
+          description: People detected on the image. Available for customers with the Visual Insights option enabled.
+        imageScenes:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Scenes detected on the image. Available for customers with the Visual Insights option enabled.
+        imageTexts:
+          type: [array, 'null']
+          items:
+            type: string
+          description: Texts detected on the image via OCR. Available for customers with the Visual Insights option enabled.
+        postType:
+          $ref: '#/components/schemas/PostType'
+        contentTypes:
+          type: [array, 'null']
+          items:
+            type: string
+            enum: [text, link, image, video, poll, subtitles, sticker]
+          description: Content types.
+        sourceFormat:
+          oneOf:
+            - $ref: '#/components/schemas/SourceSpecificFormat'
+            - type: 'null'
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags applied to the mention.
+        rating:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 5
+          description: Rating in the 0..5 range. Usually available for reviews.
+        autoCategories:
+          type: [array, 'null']
+          items:
+            type: string
+          description: List of detected [auto-categories](https://youscan.io/2018/04/wom-autocategory/).
+        subjects:
+          type: [array, 'null']
+          items:
+            type: string
+          description: List of Subjects detected in the mention.
+        starred:
+          type: boolean
+          description: Whether the mention is starred.
+        processed:
+          type: boolean
+          description: Whether the mention has been processed.
+        engagement:
+          oneOf:
+            - $ref: '#/components/schemas/MentionEngagement'
+            - type: 'null'
+        postId:
+          type: [string, 'null']
+          description: >
+            Mention ID in the external API. Be aware, it's not the YouScan ID, but the ID received
+            from a 3rd party API. Its uniqueness only makes sense within the particular source.
+            For example, a mention from Instagram could have the same postId as some mention from Facebook.
+        parentPostId:
+          type: [string, 'null']
+          description: >
+            Direct parent of the mention. E.g. for a comment, it would be the parent post ID.
+            For reposts, parentPostId is the postId of the original post.
+        discussionId:
+          type: [string, 'null']
+          description: >
+            You may use this field to group mentions into a discussion,
+            e.g. a post with all comments and replies.
+        country:
+          type: [string, 'null']
+          description: ISO alpha-2 country code.
+        region:
+          type: [string, 'null']
+        city:
+          type: [string, 'null']
+        note:
+          type: [string, 'null']
+          description: Internal note added in YouScan.
+        aspects:
+          type: [array, 'null']
+          items:
+            type: string
+          description: List of Aspects detected in the mention.
+        sentimentAspects:
+          type: [array, 'null']
+          items:
+            type: object
+            properties:
+              aspect:
+                type: string
+              sentiment:
+                $ref: '#/components/schemas/Sentiment'
+          description: List of aspects with their sentiment.
+        potentialReach:
+          type: [integer, 'null']
+          description: Potential reach.
+        authorJobs:
+          type: [array, 'null']
+          items:
+            type: string
+          description: List of author job categories. Requires the Audience Insights addon.
+        authorInterests:
+          type: [array, 'null']
+          items:
+            type: string
+          description: List of author interests. Requires the Audience Insights addon.
+        authorInterestCategories:
+          type: [array, 'null']
+          items:
+            type: string
+          description: List of author interest categories. Requires the Audience Insights addon.
+        customTags:
+          type: [array, 'null']
+          items:
+            type: string
+          description: List of custom tags.
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          description: List of assigned categories grouped with assigned subcategories.
+
+    ImportMention:
+      type: object
+      required: [url, published]
+      properties:
+        url:
+          type: string
+          description: Direct URL to the mention. Must be an absolute HTTP or HTTPS URL, unique per topic.
+        published:
+          type: string
+          format: date-time
+          description: Date when the mention was published (ISO 8601 format).
+        text:
+          type: string
+          description: Main text content of the mention.
+        title:
+          type: string
+          description: Title of the mention.
+        postId:
+          type: string
+          description: Unique identifier of the post.
+        parentPostId:
+          type: string
+          description: ID of the parent post (for comments/replies).
+        discussionId:
+          type: string
+          description: ID of the discussion thread.
+        originId:
+          type: string
+          description: Original source identifier.
+        source:
+          type: string
+          description: Source domain (e.g. "example.com"). Extracted from the URL if not provided.
+        postType:
+          type: string
+          enum: [Post, Comment, Repost]
+          description: Type of post. Default - "Post" if not provided or invalid.
+        sourceType:
+          type: string
+          enum: [Social, News, Blog, Forum, Reviews]
+          description: Type of source. Default - "Social" if not provided or invalid.
+        contentTypes:
+          type: array
+          items:
+            type: string
+            enum: [Text, Link, Image, Video, Album, Location, Poll, Subtitles, Sticker]
+          description: Types of content in the mention.
+        tagIds:
+          type: array
+          items:
+            type: integer
+          description: >
+            List of tag IDs to apply to the mention. Use the List Tags endpoint to get available
+            tag IDs for the topic. Duplicate IDs are ignored.
+        subcategoryIds:
+          type: array
+          items:
+            type: integer
+          description: >
+            List of subcategory IDs to assign to the mention. Requires the Space Categories feature.
+            Use the List Categories endpoint to get available subcategory IDs.
+        sourceSpecificFormat:
+          type: string
+          enum:
+            - InstagramReels
+            - InstagramStories
+            - PinterestStoryPins
+            - YouTubeShorts
+            - FacebookReels
+            - FacebookStories
+            - TikTokPhoto
+            - TwitterNote
+            - YouTubeLive
+            - FacebookLive
+            - TwitchLive
+            - TwitterCommunityNote
+          description: Source-specific format of the post. Should be omitted in most cases.
+        author:
+          $ref: '#/components/schemas/ImportProfile'
+        channel:
+          $ref: '#/components/schemas/ImportProfile'
+          description: Channel/publication place information.
+        engagement:
+          $ref: '#/components/schemas/ImportEngagement'
+        mentionGeo:
+          $ref: '#/components/schemas/ImportGeo'
+          description: Geographic location of the mention.
+        imageUrl:
+          type: string
+          description: URL of the main image.
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          description: Rating value (0-5).
+        language:
+          type: string
+          description: Language code (e.g. "eng").
+
+    ImportProfile:
+      type: object
+      properties:
+        profileId:
+          type: string
+          description: Unique identifier of the profile.
+        name:
+          type: string
+          description: Display name.
+        nickname:
+          type: string
+          description: Username/handle.
+        description:
+          type: string
+          description: Profile description/bio.
+        url:
+          type: string
+          description: Profile URL.
+        avatarUrl:
+          type: string
+          description: Avatar image URL.
+        subscribers:
+          type: integer
+          description: Number of subscribers/followers.
+        gender:
+          type: string
+          enum: [M, F, Community]
+          description: Gender. Use "Community" to mark non-person profiles (like a Facebook group or channel).
+        isVerified:
+          type: boolean
+          description: Verification status.
+        geo:
+          $ref: '#/components/schemas/ImportGeo'
+
+    ImportEngagement:
+      type: object
+      properties:
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        views:
+          type: integer
+        reactions:
+          type: integer
+          description: Total reactions.
+        reach:
+          type: integer
+          description: Potential reach.
+        impressions:
+          type: integer
+        saves:
+          type: integer
+
+    ImportGeo:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          description: ISO 2-letter country code (e.g. "US").
+        country:
+          type: string
+          description: Country name.
+        city:
+          type: string
+          description: City name.
+
+    ImportStatus:
+      type: object
+      properties:
+        importId:
+          type: integer
+          description: Unique import identifier.
+        name:
+          type: [string, 'null']
+          description: Import name.
+        totalMentions:
+          type: integer
+          description: Total number of mentions in the import.
+        savedCount:
+          type: integer
+          description: Number of successfully saved mentions.
+        failedCount:
+          type: integer
+          description: Number of failed mentions.
+        status:
+          type: string
+          enum: [Pending, Processing, Completed, Failed, Aborted]
+          description: Current import status.
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO 8601).
+        startedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Processing start timestamp (ISO 8601).
+        completedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Completion timestamp (ISO 8601).
+        lastError:
+          type: [string, 'null']
+          description: Last error message.
+        source:
+          type: string
+          description: Where the import was created from (e.g. "Api", "Ui").
+        userEmail:
+          type: [string, 'null']
+          description: Email of the user who created the import.
+        userName:
+          type: [string, 'null']
+          description: Name of the user who created the import.
+        canShowMentions:
+          type: boolean
+          description: Whether the imported mentions can be viewed in the topic.
+
+    ImportError:
+      type: object
+      properties:
+        permaLink:
+          type: string
+          description: URL of the mention that failed.
+        error:
+          type: string
+          description: Error description.
+        errorCode:
+          type: [string, 'null']
+          description: Error code.
+        attemptCount:
+          type: integer
+          description: Number of processing attempts.
+        createdAt:
+          type: string
+          format: date-time
+          description: Error timestamp (ISO 8601).
+
+    WebhookProfile:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Link to the profile.
+        name:
+          type: string
+        nickname:
+          type: string
+        profileId:
+          type: string
+          description: Profile ID in the source system.
+        profileType:
+          type: string
+          description: Profile type, specific to the source.
+        avatarUrl:
+          type: string
+          description: Avatar image URL.
+        subscribers:
+          type: integer
+          description: Number of subscribers (followers, friends).
+        age:
+          type: integer
+          description: Author age. Sent only for accounts with the extended webhook feature enabled.
+
+    WebhookMention:
+      type: object
+      required: [topicId, mentionId, published, postType, resourceType]
+      properties:
+        topicId:
+          type: integer
+          description: Topic ID.
+        topicName:
+          type: string
+          description: Topic name.
+        themeId:
+          type: integer
+          deprecated: true
+          description: Legacy duplicate of `topicId`.
+        themeName:
+          type: string
+          deprecated: true
+          description: Legacy duplicate of `topicName`.
+        mentionId:
+          type: integer
+          format: int64
+          description: Mention identifier.
+        sourceName:
+          type: string
+          description: Mention source (domain).
+        author:
+          $ref: '#/components/schemas/WebhookProfile'
+          description: Author info.
+        channel:
+          $ref: '#/components/schemas/WebhookProfile'
+          description: Publication place info.
+        title:
+          type: string
+          description: Mention title.
+        text:
+          type: string
+          description: Mention text.
+        url:
+          type: string
+          description: Direct URL to the mention.
+        published:
+          type: string
+          format: date-time
+          description: Date when the mention was published (ISO 8601 format).
+        addedAt:
+          type: string
+          format: date-time
+          description: Date when the mention was saved to the topic (ISO 8601 format).
+        sentiment:
+          $ref: '#/components/schemas/Sentiment'
+        imageUrl:
+          type: string
+          description: URL to the mention image.
+        language:
+          type: string
+          description: 3-letter ISO 639 language code.
+        postType:
+          $ref: '#/components/schemas/PostType'
+        resourceType:
+          type: string
+          enum: [social, blog, forum, messenger, news, reviews, other]
+          description: Source type.
+        spam:
+          type: boolean
+          description: Whether the mention is marked as spam.
+        rating:
+          type: number
+          description: Rating (for reviews).
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tag names.
+        postId:
+          type: string
+          description: External post ID.
+        parentPostId:
+          type: string
+          description: External ID of the parent post.
+        discussionId:
+          type: string
+          description: External ID of the root discussion.
+        likes:
+          type: integer
+        reposts:
+          type: integer
+        comments:
+          type: integer
+        engagement:
+          type: integer
+          description: Sum of likes, reposts and comments.
+        dislikes:
+          type: integer
+        views:
+          type: integer
+        impressions:
+          type: integer
+        reach:
+          type: integer
+        saves:
+          type: integer
+        reactions:
+          $ref: '#/components/schemas/Reactions'
+        contentTypes:
+          type: array
+          items:
+            type: string
+            enum: [text, link, image, video, poll, subtitles, sticker]
+        sourceFormat:
+          $ref: '#/components/schemas/SourceSpecificFormat'
+        country:
+          type: string
+          description: ISO alpha-2 country code.
+        region:
+          type: string
+        city:
+          type: string
+        potentialReach:
+          type: integer
+          description: Potential reach.
+        imageScenes:
+          type: array
+          items:
+            type: string
+          description: Scenes detected on the image. Requires the Visual Insights option.
+        imageObjects:
+          type: array
+          items:
+            type: string
+          description: Objects detected on the image. Requires the Visual Insights option.
+        imageColors:
+          type: array
+          items:
+            type: string
+          description: HEX color codes detected on the image. Requires the Visual Insights option.
+        imageActivities:
+          type: array
+          items:
+            type: string
+          description: Activities detected on the image. Requires the Visual Insights option.
+        imageBrands:
+          type: array
+          items:
+            type: string
+          description: Brands detected on the image. Requires the Visual Insights option.

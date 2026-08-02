@@ -1,0 +1,22 @@
+generated: '2026-07-21'
+method: searched
+source: npm registry search, PyPI, GitHub org (youscan), developers.youscan.io
+summary: >-
+  YouScan publishes no first-party client SDK. The API is a plain REST + API-key
+  surface documented by an OpenAPI 3.1 spec, so integrators call it directly over
+  HTTP. One community-maintained Python wrapper exists on PyPI/GitHub (NOT official).
+packages:
+- name: youscan
+  registry: pypi
+  url: https://pypi.org/project/youscan/
+  repository: https://github.com/bzdvdn/youscan-wrapper
+  language: python
+  official: false
+  description: >-
+    Community "Youscan Insight Rest Api wrapper" (bzdvdn/youscan-wrapper) — a
+    third-party Python client for the YouScan API. Not published or endorsed by
+    YouScan.
+notes: >-
+  Searches of npm, PyPI, and the youscan GitHub organization found no first-party
+  client library. The youscan GitHub org contains only internal infrastructure and
+  ML forks, not an API SDK. Integrate against the OpenAPI 3.1 spec directly.

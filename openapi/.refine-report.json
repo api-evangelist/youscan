@@ -1,0 +1,28 @@
+{
+  "provider": "youscan",
+  "sources": [
+    "youscan-data-import-api-openapi.yml",
+    "youscan-history-api-openapi.yml",
+    "youscan-mentions-api-openapi.yml",
+    "youscan-spaces-api-openapi.yml",
+    "youscan-statistics-api-openapi.yml",
+    "youscan-tags-api-openapi.yml",
+    "youscan-topics-api-openapi.yml",
+    "youscan-webhook-api-openapi.yml"
+  ],
+  "outputs": [
+    "youscan-data-import-api-openapi.yml",
+    "youscan-history-api-openapi.yml",
+    "youscan-mentions-api-openapi.yml",
+    "youscan-spaces-api-openapi.yml",
+    "youscan-statistics-api-openapi.yml",
+    "youscan-tags-api-openapi.yml",
+    "youscan-topics-api-openapi.yml",
+    "youscan-webhook-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}

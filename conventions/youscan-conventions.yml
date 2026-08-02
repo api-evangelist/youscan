@@ -1,0 +1,50 @@
+generated: '2026-07-21'
+method: searched
+source: developers.youscan.io/api/openapi.yaml + help.youscan.io
+summary: >-
+  Cross-cutting request/response semantics for the YouScan API, from its OpenAPI 3.1
+  spec and knowledge base. REST + API key, custom JSON error envelope, per-topic
+  permission model, and outbound webhooks for the event surface.
+base_url: https://api.youscan.io/api/external
+authentication:
+  style: api-key
+  header: X-API-KEY
+  alt_query_param: apiKey (testing only)
+  model: >-
+    Each key belongs to a single user in a single account and inherits that user's
+    topic access (View / Edit / Manage). 402 when the plan lacks API access.
+  ref: authentication/youscan-authentication.yml
+idempotency:
+  supported: false
+  note: No Idempotency-Key header or idempotent-retry semantics are documented.
+pagination:
+  supported: true
+  style: parameter-based (size + offset/continuation)
+  applies_to: mention listing and large result sets
+  note: >-
+    Mention retrieval is paged; use filters (dates, sources, post types, tags) to bound
+    result size. Reddit/Quora and some sources are excluded; Twitter/X restricted.
+filtering:
+  supported: true
+  note: >-
+    Rich filtering on mentions and statistics — date ranges (from/to, addedFrom/addedTo),
+    sources, source types, countries, tags, sentiments, post types, with exclude-* variants.
+versioning:
+  scheme: single stable version; additive; changes in docs Version history
+  ref: lifecycle/youscan-lifecycle.yml
+error_envelope:
+  format: custom-json
+  shape: "{ errorCode, message, errors?[], resourceType? }"
+  ref: errors/youscan-problem-types.yml
+rate_limiting:
+  documented: true
+  guidance: "<=5 parallel requests; <=10 requests per 10 seconds"
+  over_limit_status: 429
+  headers: none documented
+event_surface:
+  type: outbound-webhooks
+  config: per-topic in UI (Settings -> Integrations); no create API
+  ack: respond 2xx within 4 minutes
+  ref: asyncapi/youscan-mentions-webhooks.yml
+request_id_tracing:
+  documented: false

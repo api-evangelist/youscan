@@ -1,0 +1,47 @@
+generated: '2026-07-21'
+method: derived
+source: openapi/youscan-openapi.yaml + developers.youscan.io docs
+summary: >-
+  Cross-cutting standards conformance for the YouScan API, derived from its OpenAPI 3.1
+  spec and documented behavior. YouScan is a plain REST + API-key data API; it does not
+  implement OAuth/OIDC or domain profiles (FHIR/FAPI/SCIM/OData/PSD2).
+standards:
+- id: openapi-3.1
+  conforms: true
+  evidence: Official machine-readable OpenAPI 3.1.0 spec published at developers.youscan.io/api/openapi.yaml.
+- id: oauth2
+  conforms: false
+  evidence: Authentication is API-key only (X-API-KEY header or apiKey query param); no OAuth2 flows declared.
+- id: oidc
+  conforms: false
+  evidence: No OpenID Connect / openid-configuration endpoint (developers host is an SPA catch-all).
+- id: rfc9457
+  conforms: false
+  evidence: Errors use a custom {errorCode, message, errors[]} JSON envelope, not application/problem+json.
+- id: rfc8594-deprecation
+  conforms: false
+  evidence: No Sunset/Deprecation headers documented; changes are communicated via the docs Version history.
+- id: pagination
+  conforms: true
+  evidence: Mention listing supports paginated retrieval (size/from-style parameters and continuation over large result sets).
+- id: idempotency
+  conforms: false
+  evidence: No Idempotency-Key header or idempotent-retry semantics documented.
+- id: webhooks
+  conforms: true
+  evidence: Outbound mention webhooks documented and modeled in the OpenAPI spec (Webhook tag, WebhookMention schema).
+- id: json-api
+  conforms: false
+  evidence: Responses are plain JSON, not JSON:API media type or envelope.
+- id: fhir
+  conforms: false
+  evidence: Not a healthcare API.
+- id: fapi
+  conforms: false
+  evidence: Not a financial-grade API; no OAuth/FAPI security profile.
+- id: scim
+  conforms: false
+  evidence: No SCIM user/group provisioning surface.
+- id: odata
+  conforms: false
+  evidence: No OData query conventions.

@@ -1,0 +1,14 @@
+{
+  "repo": "youscan",
+  "feeds": [
+    {
+      "source": "https://help.youscan.io/en/collections/76280-integrations-and-api",
+      "feed_url": "https://help.youscan.io/en/collections/76280-integrations-and-api",
+      "title": "",
+      "saved": 0,
+      "method": "none"
+    }
+  ],
+  "post_count": 0,
+  "fetched": "2026-08-01T15:49:00Z"
+}

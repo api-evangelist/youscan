@@ -1,0 +1,28 @@
+generated: '2026-07-21'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + OpenAPI hosts
+hosts:
+- host: youscan.io
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Aug 22 17:32:25 2026 GMT
+  hsts: true
+  hsts_max_age: 2592000
+- host: developers.youscan.io
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Sep 16 12:10:19 2026 GMT
+  hsts: true
+  hsts_max_age: 2592000
+- host: api.youscan.io
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Sep 10 15:56:09 2026 GMT
+  hsts: null
+domains:
+- domain: youscan.io
+  dnssec: false
+  caa: []
+  spf: true
+  dmarc: true
+  dmarc_policy: reject

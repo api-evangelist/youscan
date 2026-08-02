@@ -1,0 +1,25 @@
+generated: '2026-07-21'
+method: searched
+source: openapi/youscan-openapi.yaml
+docs: https://help.youscan.io/en/articles/2754452-how-to-use-youscan-api
+summary:
+  types:
+  - apiKey
+  api_key_in:
+  - header
+  - query
+schemes:
+- name: ApiKeyHeader
+  type: apiKey
+  in: header
+  parameter: X-API-KEY
+  description: API key authentication. The recommended way to authenticate requests.
+  sources:
+  - openapi/youscan-openapi.yaml
+- name: ApiKeyQuery
+  type: apiKey
+  in: query
+  parameter: apiKey
+  description: API key as a query parameter. For testing purposes only.
+  sources:
+  - openapi/youscan-openapi.yaml

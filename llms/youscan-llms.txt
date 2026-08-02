@@ -1,0 +1,12 @@
+# YouScan API
+
+> REST API for the YouScan social media listening platform: manage topics, retrieve and stream mentions, manage tags, and query statistics collected across social and web sources.
+
+Base URL: `https://api.youscan.io/api/external`
+
+Authentication: send your key in the `X-API-KEY` request header (or `?apiKey=` for testing).
+
+## API specification
+
+- [OpenAPI 3.1 specification (YAML)](https://developers.youscan.io/api/openapi.yaml): The complete, authoritative definition — every endpoint, parameter, schema, and example, plus authentication, permissions, rate limits, and the error model. This is the single source of truth; fetch and read it to answer anything specific.
+- [API reference (rendered)](https://developers.youscan.io/api/): Human-browsable Scalar reference. It is JavaScript-rendered, so for programmatic or LLM use prefer the YAML spec above.

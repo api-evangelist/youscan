@@ -1,7 +1,14 @@
 aid: youscan
 name: YouScan
-description: YouScan is a company surfaced as a portfolio company of 500-global and added to the API Evangelist
-  network as a stub for enrichment. This profile is a lead awaiting the enrichment pipeline.
+description: >-
+  YouScan is an AI-powered social media listening and consumer-intelligence platform
+  that monitors mentions, conversations, and images across social networks, news, blogs,
+  forums, and review sites. It provides sentiment analysis, trend and topic detection,
+  visual insights via image recognition, and an AI Insights Copilot for querying data in
+  natural language. YouScan exposes a REST API (documented with an OpenAPI 3.1
+  specification) to manage monitoring topics, retrieve and stream mentions, manage tags,
+  run data imports, and query statistics, plus outbound webhooks that push new mentions
+  to subscriber endpoints in real time.
 url: https://raw.githubusercontent.com/api-evangelist/youscan/refs/heads/main/apis.yml
 x-type: company
 x-source: vc-portfolio
@@ -9,17 +16,569 @@ x-backed-by:
 - 500-global
 x-tier: stub
 x-tier-reason: portfolio-lead
+accessModel:
+  pricing: unknown
+  onboarding: self-serve
+  trial: false
+  try_now: false
+  public: false
+  label: Self-serve signup
+  confidence: medium
+  source:
+  - authentication
+  generated: '2026-07-22'
+  method: derived
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-21'
+x-enrichment:
+  date: '2026-07-21'
+  status: enriched
+  artifacts_added: 17
+  pass: local-v1
+image: https://youscan.io/favicon.ico
 tags:
 - Company
-apis: []
+- Social Media Listening
+- Social Intelligence
+- Consumer Insights
+- Sentiment Analysis
+- Media Monitoring
+- Analytics
+- Artificial Intelligence
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+apis:
+- aid: youscan:youscan-data-import-api
+  name: YouScan Data Import API
+  description: >-
+    The Data Import API allows you to import mentions from external sources into YouScan topics.
+
+    This feature enables you to bring historical data or mentions from sources not natively
+
+    supported by YouScan.
+
+
+    **Beta Notice**: This API is currently in beta and may undergo minor changes.
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - Data Import
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-data-import-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
+- aid: youscan:youscan-history-api
+  name: YouScan History API
+  description: >-
+    Manage historical data collection for a topic.
+
+
+    Starting a collection can return `400` if a collection is already running, if the date
+
+    range is invalid, or if the requested depth exceeds your plan's history limit.
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - History
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-history-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
+- aid: youscan:youscan-mentions-api
+  name: YouScan Mentions API
+  description: >-
+    Retrieve and update mentions collected in a topic.
+
+
+    ### How to effectively retrieve large sets of mentions
+
+
+    Common scenarios are:
+
+    * Load all the mentions from a given topic for a given period
+
+    * Periodically poll a topic to get new mentions (see the next section)
+
+
+    Every list response contains:
+
+
+    - `total` — the number of mentions matching your filters, across all pages;
+
+    - `mentions` — one page of results, at most `size` of them (default 10, max 1000);
+
+    - `lastSeq` — a sequence-number high-water mark (see the cursor loop below).
+
+
+    If `total` exceeds the number of mentions you received, there is more to fetch. Use
+
+    the `sinceSeq` cursor: every mention has a `seq` number, assigned in the order
+
+    mentions were saved to the topic, and cursor paging over it has no depth limit and
+
+    never skips or duplicates mentions.
+
+
+    The cursor loop:
+
+
+    1. Start the session:
+       ```
+       GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&orderBy=seqAsc
+       ```
+       `orderBy=seqAsc` returns mentions in the order they were saved to the topic.
+    2. Take the highest `seq` value from the returned `mentions` array and repeat the
+       request with `&sinceSeq={that value}`. `sinceSeq` is exclusive — the next page
+       starts right after it:
+       ```
+       GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&sinceSeq=8541234&orderBy=seqAsc
+       ```
+    3. Stop when a response returns fewer than `size` mentions.
+
+
+    ### Polling for new mentions
+
+
+    Mentions are discovered with a delay — minutes to hours after publication — and
+
+    history collection can add much older mentions at any time. Because `from`/`to` filter
+
+    by *publication* date, repeatedly fetching a fixed window such as "yesterday 22:00 —
+
+    today 07:00" misses every mention that was published inside the window but collected
+
+    after your request ran; such mentions never show up in any later window either.
+
+
+    Poll with the cursor instead:
+
+
+    1. Run the cursor loop above once and persist the highest `seq` you received.
+
+    2. On every subsequent run, start with `sinceSeq={persisted value}&orderBy=seqAsc`,
+       drain the pages, and persist the new high-water mark.
+
+    A mention gets its `seq` when it is saved to the topic, so late-arriving mentions are
+
+    always picked up by your next poll, no matter when they were published. Two additions:
+
+
+    - If you also need fields that change *after* a mention is saved — engagement counts,
+      corrected sentiment, added tags — periodically re-fetch a trailing window (say, the
+      last 72 hours), or use the `engagementCollectedFrom` / `addedFrom` filters.
+    - If you'd rather not poll at all, configure a webhook (see the Webhook section) and
+      receive each new mention the moment it is saved.
+
+    ### Dates and time zones
+
+
+    Date filters match mentions by their **publication date**. Two rules save a lot of
+
+    confusion:
+
+
+    - **Date values without an explicit UTC offset are interpreted in the API key owner's
+      time zone** — the time zone configured in the profile of the user the key belongs to.
+      To make requests unambiguous, always pass explicit offsets (`from=2026-06-01T00:00Z`)
+      or set the `timeZone` parameter.
+    - **`to` is inclusive**: the effective upper bound is `to` plus one day. `to=2026-06-21`
+      includes the whole of June 21.
+
+    The platform UI always shows periods in the signed-in user's time zone. To reproduce a
+
+    number seen in the UI, request the same period with `timeZone` set to that user's zone —
+
+    or convert the period boundaries to UTC yourself.
+
+
+    ### Deleted data
+
+
+    The API returns the current state of the topic at the moment of the request:
+
+
+    - a deleted topic returns `404` (`message: "Theme not found"`) — its mentions are no
+      longer accessible;
+    - deleted tags disappear from mention responses — there is no "deleted" marker;
+
+    - mentions moved to the Bin are excluded unless you pass `deleted=true`.
+
+
+    Data you exported earlier is not updated retroactively. If you keep a local copy,
+
+    reconcile it periodically against the current *List topics* and *List tags* responses.
+
+
+    ### Data limitations
+
+
+    > **Mentions from Reddit, Quora and several other forums and review websites are not accessible**
+
+    > via the list mentions endpoint.
+
+
+    > **Twitter data limitations**: We are limiting the data which can be accessed for mentions collected
+
+    > from Twitter. The following adjustments are applied:
+
+    > - Mention's Text and Full Text properties are removed
+
+    > - Mention URL is removed
+
+    > - Author URL, Author Name and Author AvatarUrl are removed
+
+    > - Profile ID of the author is added to Author information (the ID itself is the ID of the Twitter
+    Profile)
+
+    > - Post ID is the ID of the Tweet
+
+    > - Combining Profile ID and Post ID allows you to navigate to the exact Tweet which was collected
+
+    >   as the corresponding mention.
+
+
+    ### Why API data may differ from the platform UI
+
+
+    The API and the platform read the same storage — for the same query they return the
+
+    same data. Almost every reported discrepancy turns out to be one of the causes
+
+    described above:
+
+
+    1. **Time zones.** The UI uses the viewer's time zone; your request may be using a
+       different one — see *Dates and time zones*.
+    2. **Sources not available via API.** Reddit, Quora and several other sources are
+       visible in the UI but never returned by the API. Exclude them in the UI search
+       before comparing counts — see *Data limitations*.
+    3. **Pagination.** One request returns at most 1,000 mentions. Compare the response
+       `total` with the UI count, not the number of rows you fetched — see *How to
+       effectively retrieve large sets of mentions*.
+    4. **Collection delays.** A period you fetched an hour ago may contain more mentions
+       now — see *Polling for new mentions*.
+    5. **Twitter restrictions.** Twitter mentions come without text, URL and author
+       details, which makes row-by-row comparison with UI exports misleading — see
+       *Data limitations*.
+    6. **Deleted data.** Deleted topics, tags and binned mentions disappear from
+       responses, while copies you saved earlier keep them — see *Deleted data*.
+
+    If the numbers still differ after checking all of the above, capture the exact request
+
+    URL, the time you sent it, and the raw response — and contact support with those
+
+    details.
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - Mentions
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-mentions-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
+- aid: youscan:youscan-spaces-api
+  name: YouScan Spaces API
+  description: Spaces available to the authenticated user and categories configured in them.
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - Spaces
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-spaces-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
+- aid: youscan:youscan-statistics-api
+  name: YouScan Statistics API
+  description: >-
+    Aggregated statistics for mentions of a topic.
+
+
+    ### Dates
+
+
+    `from` and `to` are dates (`yyyy-MM-dd`); `to` is inclusive. Day boundaries are
+
+    computed in the API key owner's time zone (see *Dates and time zones* in the Mentions section).
+
+
+    ### Filters
+
+
+    All statistics endpoints accept a common set of optional filters:
+
+
+    - `country` (`string[]`): e.g. `country=uk&country=us`
+
+    - `excludeCountry` (`string[]`): e.g. `excludeCountry=uk&excludeCountry=us`
+
+    - `sourceTypes` (`string[]`): one of `blog`, `forum`, `news`, `social`, `reviews`, `messenger` (e.g.
+    `sourceTypes=social&sourceTypes=blog`)
+
+    - `excludeSourceTypes` (`string[]`): same values as `sourceTypes`
+
+    - `sources` (`string[]`): e.g. `sources=telegram.me&sources=youscan.io`
+
+    - `excludeSources` (`string[]`): e.g. `excludeSources=telegram.me&excludeSources=youscan.io`
+
+    - `tags` (`int[]`): filter by tag IDs
+
+    - `excludeTag` (`int[]`): exclude filter by tag IDs
+
+
+    Every statistics response contains a `totalCount` field — the total number of mentions matching the
+    filters.
+
+
+    An unknown or inaccessible `topicId` returns `404` with `message: "Theme not found"`.
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - Statistics
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-statistics-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
+- aid: youscan:youscan-tags-api
+  name: YouScan Tags API
+  description: Manage tags created in your topic.
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - Tags
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-tags-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
+- aid: youscan:youscan-topics-api
+  name: YouScan Topics API
+  description: >-
+    Create and manage topics — the monitoring entities that collect mentions matching your queries.
+
+
+    ### Topic query structure
+
+
+    A topic query consists of a `textQuery` and/or `viQuery` (at least one is required) plus an optional
+    `filter`.
+
+
+    For all topic query filters, the following field names are supported:
+
+
+    - `country`: ISO2 country code (e.g. `country=US`, `country=UA`)
+
+    - `countryGroup`: Europe, Asia, NorthAmerica, CentralAmerica, TheCaribbean, SouthAmerica, Africa,
+    Oceania (e.g. `countryGroup=Europe`)
+
+    - `language`: ISO639-2 language code (e.g. `language=ENG`, `language=UKR`)
+
+    - `source`: domain format (e.g. `source=instagram.com`)
+
+    - `sourceType`: social, messenger, reviews, news, blog, forum (e.g. `sourceType=social`)
+
+    - `postType`: post, repost, extendedRepost, comment (e.g. `postType=post`)
+
+    - `contentType`: text, link, image, video, poll, subtitles, sticker (e.g. `contentType=image`)
+
+    - `authorAge`: numeric value (e.g. `authorAge=18`)
+
+    - `authorSubscribers`: numeric value (e.g. `authorSubscribers=1000`)
+
+    - `gender`: `male` or `female` (e.g. `gender=male`)
+
+
+    Supported Visual Insights (VI) query values (used inside `viQuery`):
+
+
+    - `logo`: detect specific brand logos (e.g. `logo:"nike"`)
+
+    - `image.object`: find specific objects (e.g. `image.object:"car"`)
+
+    - `image.activity`: find activities (e.g. `image.activity:"cooking"`)
+
+    - `image.person`: find people types (e.g. `image.person:"athlete"`)
+
+    - `image.scene`: find settings (e.g. `image.scene:"beach"`)
+
+    - `image.type`: filter by image type (e.g. `image.type:"PHOTO"`)
+
+    - `image.subtype`: filter by image subtype (e.g. `image.subtype:"selfie"`)
+
+    - `text`: search mention text (e.g. `text:"sale"`)
+
+
+    Supported operations for each filter:
+
+
+    - `oneOf`: field value must match one of the specified values. Applicable to most fields.
+
+    - `notOneOf`: field value must not match any of the specified values. Applicable to most fields.
+
+    - `greaterOrEqual`: field value must be greater than or equal to the specified value. Numeric fields
+    only (`authorAge`, `authorSubscribers`).
+
+    - `lessOrEqual`: field value must be less than or equal to the specified value. Numeric fields only
+    (`authorAge`, `authorSubscribers`).
+
+
+    Each filter object must specify:
+
+    - `fieldName`: The field to filter on (see the list above)
+
+    - `op`: The operation to perform (see the list above)
+
+    - `value`: JSON-encoded array of values (e.g. `["ua"]`)
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - Topics
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-topics-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
+- aid: youscan:youscan-webhook-api
+  name: YouScan Webhook API
+  description: >-
+    Webhooks push new mentions to your own server in real time, so you don't have to poll the
+
+    API. Every time a new mention is found and saved to a topic, YouScan sends an HTTP `POST`
+
+    with the mention payload to a URL you control.
+
+
+    ### Setup
+
+
+    Webhooks are configured in the YouScan UI — there is **no API to create them**. Open a
+
+    topic's **Settings → Integrations**, click **Add** next to *Webhook*, and enter your
+
+    destination URL. Full guide:
+
+    [How to use webhook integration](https://help.youscan.io/en/articles/3371690-how-to-use-webhook-integration).
+
+
+    - Set up **per topic** — point several topics at the same URL, or add several webhooks to one topic.
+
+    - Mentions are sent **automatically** via rule-based alerts, and can also be sent **manually** from
+    the mention stream.
+
+    - For a protected endpoint, put Basic Auth credentials in the URL: `https://user:password@example.com/callback`.
+
+
+    ### Your endpoint
+
+
+    Respond with any `2xx` status code within **4 minutes** to acknowledge receipt; any other
+
+    response — or a timeout — is treated as a failed delivery. Fields with `null` values are
+
+    omitted from the payload.
+
+
+    > Mentions from Reddit, Quora and some smaller sources are not delivered. Twitter mentions
+
+    > are restricted — text, URL and author details are removed.
+  humanURL: https://developers.youscan.io/
+  baseURL: https://api.youscan.io/api/external
+  tags:
+  - Webhook
+  properties:
+  - type: OpenAPI
+    url: openapi/youscan-webhook-api-openapi.yml
+  - type: LLMsTxt
+    url: llms/youscan-llms.txt
+  - type: Documentation
+    url: https://developers.youscan.io/
+  - type: APIReference
+    url: https://developers.youscan.io/api/
 common:
 - type: Website
-  url: https://leadscanr.com
+  url: https://youscan.io
+- type: DeveloperPortal
+  url: https://developers.youscan.io/
+- type: Documentation
+  url: https://developers.youscan.io/
+- type: APIReference
+  url: https://developers.youscan.io/api/
+- type: HelpCenter
+  url: https://help.youscan.io
+- type: Support
+  url: https://help.youscan.io/en/collections/76280-integrations-and-api
+- type: Blog
+  url: https://youscan.io/blog/
+- type: Pricing
+  url: https://youscan.io/pricing/
+- type: SignUp
+  url: https://app.youscan.io
+- type: TermsOfService
+  url: https://youscan.io/terms-of-service
+- type: PrivacyPolicy
+  url: https://youscan.io/privacy-policy
+- type: GitHubOrganization
+  url: https://github.com/youscan
+- type: StatusPage
+  url: lifecycle/youscan-lifecycle.yml
+- type: Lifecycle
+  url: lifecycle/youscan-lifecycle.yml
+- type: ChangeLog
+  url: changelog/youscan-changelog.yml
+- type: Webhooks
+  url: asyncapi/youscan-mentions-webhooks.yml
+- type: Conventions
+  url: conventions/youscan-conventions.yml
+- type: ErrorCatalog
+  url: errors/youscan-problem-types.yml
+- type: Conformance
+  url: conformance/youscan-conformance.yml
+- type: DataModel
+  url: data-model/youscan-data-model.yml
+- type: Authentication
+  url: authentication/youscan-authentication.yml
+- type: DomainSecurity
+  url: security/youscan-domain-security.yml
+- type: MCPServer
+  url: mcp/youscan-mcp.yml
+- type: Packages
+  url: packages/youscan-packages.yml
+- type: AgentSkill
+  url: skills/_index.yml

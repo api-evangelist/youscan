@@ -1,0 +1,41 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enrichment overlay for YouScan API
+  version: 1.0.0
+x-provenance:
+  generated: '2026-07-21'
+  method: generated
+  source: openapi/youscan-openapi.yaml
+  note: >-
+    Non-destructive OpenAPI Overlay 1.0.0 capturing API Evangelist enrichment
+    annotations. Extends openapi/youscan-openapi.yaml; does not mutate the original.
+extends: openapi/youscan-openapi.yaml
+actions:
+- target: $.info
+  update:
+    x-api-evangelist:
+      provider: youscan
+      category: social-media-listening
+      auth: api-key
+      rate-limit: "<=5 parallel requests, <=10 requests / 10 seconds; 429 on excess"
+      event-surface: outbound-webhooks (UI-configured; no create API)
+- target: $.info
+  update:
+    x-status-page: https://status.youscan.io
+    x-changelog: docs (Version history tag) + changelog/youscan-changelog.yml
+- target: $.paths['/topics/{topicId}/mentions'].get
+  update:
+    x-ae-note: >-
+      Primary mention-retrieval endpoint. Reddit, Quora and some smaller sources are
+      excluded; Twitter/X mentions are restricted (text, URL and author removed).
+- target: $.paths['/your-webhook-endpoint'].post
+  update:
+    x-ae-note: >-
+      Outbound webhook YouScan POSTs to a subscriber URL on each new mention. Configured
+      per-topic in the UI (Settings -> Integrations); no API to create webhooks. Respond
+      2xx within 4 minutes to acknowledge. See asyncapi/youscan-mentions-webhooks.yml.
+- target: $.components.securitySchemes.ApiKeyQuery
+  update:
+    x-ae-warning: >-
+      Query-parameter API keys are for testing only; keys can leak via logs and
+      referrers. Prefer the X-API-KEY header in production.

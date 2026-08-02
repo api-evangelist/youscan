@@ -1,0 +1,61 @@
+generated: '2026-07-21'
+method: derived
+source: openapi/youscan-openapi.yaml (Error/ValidationError schemas + 4xx responses); developers.youscan.io error docs
+format: custom-json
+summary: >-
+  YouScan does NOT use RFC 9457 problem+json. Client errors return a conventional HTTP
+  status plus a JSON body with a machine-readable `errorCode` and a human `message`
+  field. Validation errors additionally carry a per-field `errors[]` array.
+envelope:
+  fields:
+    errorCode: Machine-readable error code (use this in code).
+    message: Human-friendly description.
+    resourceType: Present on RESOURCE_NOT_FOUND — the type of the missing resource (e.g. "Import", "Space").
+    errors: Present on VALIDATION_ERROR — array of {field, errorCode, message}.
+  example:
+    message: "Validation Failed -- 'Name' must be between 1 and 75 characters."
+    errorCode: VALIDATION_ERROR
+    errors:
+    - field: Name
+      errorCode: length_error
+      message: "'Name' must be between 1 and 75 characters."
+problem_types:
+- code: VALIDATION_ERROR
+  http_status: 400
+  title: Validation failed
+  remediation: Fix the offending request fields listed in errors[]; each entry names the field and reason.
+- code: RESOURCE_NOT_FOUND
+  http_status: 404
+  title: Resource not found
+  remediation: The referenced topic/import/space/tag does not exist or is not visible to your key. Existence is intentionally not revealed. Check resourceType.
+- code: THEME_PERMISSION_DENIED
+  http_status: 403
+  title: Insufficient topic permission
+  remediation: Your API key's user has View/Edit/Manage level too low for this action on the topic. Raise the user's permission on the topic.
+- code: ALREADY_EXISTS
+  http_status: 409
+  title: Resource already exists
+  remediation: A tag (or similar resource) with the same name already exists on the topic. Reuse the existing one.
+- code: HISTORY_LIMIT_EXCEEDED
+  http_status: 400
+  title: History collection limit exceeded
+  remediation: The requested historical collection exceeds the plan/quota limit. Narrow the date range.
+- code: IMPORT_NOT_ABORTABLE
+  http_status: 400
+  title: Import cannot be aborted
+  remediation: The import has already completed or is in a state that cannot be aborted.
+status_codes:
+- status: 401
+  meaning: Unauthorized — missing or invalid API key.
+- status: 402
+  meaning: Payment Required — your subscription plan does not include the API access this endpoint requires.
+- status: 403
+  meaning: Forbidden — you can see the topic but your permission level is too low.
+- status: 404
+  meaning: Not Found — resource does not exist or is not visible (existence not revealed).
+- status: 413
+  meaning: Payload Too Large — import payload exceeds size limits.
+- status: 429
+  meaning: Too Many Requests — exceeded rate limits (<=5 parallel, <=10 / 10s).
+- status: 5xx
+  meaning: Server error on YouScan's side.

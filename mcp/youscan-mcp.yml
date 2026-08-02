@@ -1,0 +1,62 @@
+generated: '2026-07-21'
+method: derived
+source: openapi/youscan-openapi.yaml
+status: candidate
+summary: >-
+  No official hosted or remote MCP server was found for YouScan (searched the docs,
+  developers.youscan.io, GitHub org, and the MCP registry). The tool list below is a
+  DERIVED candidate mapping of read-oriented YouScan API operations to MCP tools, for
+  reference only — not a published server.
+server:
+  name: youscan
+  official: false
+  transport: null
+  url: null
+base_url: https://api.youscan.io/api/external
+auth: API key via X-API-KEY header
+tools:
+- name: list_topics
+  operationId: listTopics
+  method: GET
+  path: /topics
+  description: List monitoring topics accessible to the API key.
+- name: list_mentions
+  operationId: listMentions
+  method: GET
+  path: /topics/{topicId}/mentions
+  description: Retrieve mentions collected for a topic, with filtering and pagination.
+- name: get_mentions_by_ids
+  operationId: getMentionsByIds
+  method: GET
+  path: /topics/{topicId}/get-mentions
+  description: Fetch specific mentions by their IDs.
+- name: get_sentiment_statistics
+  operationId: getSentimentsStatistics
+  method: GET
+  path: /topics/{topicId}/statistics/sentiments
+  description: Sentiment distribution statistics for a topic.
+- name: get_histogram_statistics
+  operationId: getHistogramStatistics
+  method: GET
+  path: /topics/{topicId}/statistics/histogram
+  description: Time-series histogram of mention volume for a topic.
+- name: get_words_statistics
+  operationId: getWordsStatistics
+  method: GET
+  path: /topics/{topicId}/statistics/words
+  description: Top words / topic cloud statistics for a topic.
+- name: list_spaces
+  operationId: listSpaces
+  method: GET
+  path: /spaces
+  description: List spaces available to the authenticated user.
+- name: list_tags
+  operationId: listTags
+  method: GET
+  path: /topics/{topicId}/tags
+  description: List tags configured on a topic.
+notes: >-
+  Only read/query operations are surfaced as candidate tools; write operations
+  (create/delete topic, bulk-update mentions, imports) are intentionally omitted from
+  the default candidate surface. Promote to status: published only if YouScan ships an
+  official MCP server.

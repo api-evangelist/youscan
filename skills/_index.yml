@@ -1,0 +1,15 @@
+generated: '2026-07-21'
+method: generated
+source: openapi/youscan-openapi.yaml
+summary: >-
+  Packaged Agent Skills for the YouScan API, one per marquee flow, grounded in real
+  operationIds from the OpenAPI 3.1 spec.
+skills:
+- name: youscan-monitor-mentions
+  file: youscan-monitor-mentions.md
+  description: Retrieve recent mentions for a topic and summarize sentiment.
+  operations: [listTopics, listMentions, getSentimentsStatistics, getWordsStatistics]
+- name: youscan-import-mentions
+  file: youscan-import-mentions.md
+  description: Import external mentions into a topic and track the job.
+  operations: [listTopics, createImport, getImportStatus, getImportErrors, abortImport]
