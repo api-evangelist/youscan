@@ -532,6 +532,8 @@ apis:
   - type: APIReference
     url: https://developers.youscan.io/api/
 common:
+- type: Overlay
+  url: overlays/youscan-openapi-overlay.yaml
 - type: Website
   url: https://youscan.io
 - type: DeveloperPortal
