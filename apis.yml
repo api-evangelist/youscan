@@ -30,11 +30,11 @@ accessModel:
   method: derived
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-21'
+modified: '2026-08-13'
 x-enrichment:
-  date: '2026-07-21'
+  date: '2026-08-13'
   status: enriched
-  artifacts_added: 17
+  artifacts_added: 5
   pass: local-v1
 image: https://youscan.io/favicon.ico
 tags:
@@ -532,6 +532,8 @@ apis:
   - type: APIReference
     url: https://developers.youscan.io/api/
 common:
+- type: TrustCenter
+  url: security/youscan-trust-center.yml
 - type: Overlay
   url: overlays/youscan-openapi-overlay.yaml
 - type: Website
@@ -584,3 +586,15 @@ common:
   url: packages/youscan-packages.yml
 - type: AgentSkill
   url: skills/_index.yml
+- type: GettingStarted
+  url: https://help.youscan.io/en/articles/2754452-how-to-use-youscan-api
+- type: Security
+  url: security/youscan-vulnerability-disclosure.yml
+- type: VulnerabilityDisclosure
+  url: security/youscan-vulnerability-disclosure.yml
+- type: Compliance
+  url: security/youscan-trust-center.yml
+- type: Plans
+  url: plans/youscan-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/youscan-rate-limits.yml
