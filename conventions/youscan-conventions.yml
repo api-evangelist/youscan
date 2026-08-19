@@ -39,8 +39,10 @@ error_envelope:
 rate_limiting:
   documented: true
   guidance: "<=5 parallel requests; <=10 requests per 10 seconds"
+  enforcement: advisory ("we recommend" / "might be rejected")
   over_limit_status: 429
-  headers: none documented
+  headers: none documented, and none observed on a live 401 probe 2026-08-13
+  ref: rate-limits/youscan-rate-limits.yml
 event_surface:
   type: outbound-webhooks
   config: per-topic in UI (Settings -> Integrations); no create API

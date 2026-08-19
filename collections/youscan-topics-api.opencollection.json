@@ -1,0 +1,109 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "YouScan Data Import Topics API",
+    "version": "1.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "X-API-KEY",
+      "value": "{{X-API-KEY}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Topics",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List topics",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics"
+          },
+          "docs": "List all topics available in your account."
+        },
+        {
+          "info": {
+            "name": "Create topic",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new topic for mention monitoring."
+        },
+        {
+          "info": {
+            "name": "Preview topic",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/preview",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Estimate the number of monthly mentions for a topic query before creating a topic. This helps you check if your query is within your plan limits and if sampling is available.\n"
+        },
+        {
+          "info": {
+            "name": "Update topic query",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/query/edit",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates an existing topic's query parameters."
+        },
+        {
+          "info": {
+            "name": "Delete topic",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.youscan.io/api/external/topics/:topicId",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ]
+          },
+          "docs": "Deletes a topic and all its associated data. This action is irreversible."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

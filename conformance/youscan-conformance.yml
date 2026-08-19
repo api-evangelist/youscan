@@ -1,6 +1,6 @@
-generated: '2026-07-21'
-method: derived
-source: openapi/youscan-openapi.yaml + developers.youscan.io docs
+generated: '2026-08-13'
+method: searched
+source: openapi/youscan-openapi.yaml + developers.youscan.io docs + https://trust.youscan.io/
 summary: >-
   Cross-cutting standards conformance for the YouScan API, derived from its OpenAPI 3.1
   spec and documented behavior. YouScan is a plain REST + API-key data API; it does not
@@ -45,3 +45,38 @@ standards:
 - id: odata
   conforms: false
   evidence: No OData query conventions.
+- id: rfc9331-ratelimit-headers
+  conforms: false
+  evidence: >-
+    Limits are published as prose guidance (5 parallel, 10 requests / 10 s) but no RateLimit-*
+    or Retry-After header is documented, and none was observed on a live response.
+    See rate-limits/youscan-rate-limits.yml.
+- id: soc2-type2
+  conforms: true
+  evidence: SOC 2 Type 2 named on the public SafeBase trust center at https://trust.youscan.io/ (report gated behind an access request).
+- id: iso-27001
+  conforms: true
+  evidence: ISO/IEC 27001:2022 certification named on https://trust.youscan.io/.
+- id: gdpr
+  conforms: true
+  evidence: >-
+    GDPR listed under Certificates on https://trust.youscan.io/; a GDPR request form is
+    published at https://youscan.io/gdpr-request/ and an Author Privacy Policy is maintained
+    separately from the customer privacy policy.
+- id: pci-dss
+  conforms: false
+  evidence: Not named on the trust center; card payments are handled by Stripe, not YouScan.
+- id: hipaa
+  conforms: false
+  evidence: Not a healthcare API; not named on the trust center.
+- id: fedramp
+  conforms: false
+  evidence: Not named on the trust center.
+compliance:
+  published: true
+  source: https://trust.youscan.io/
+  ref: security/youscan-trust-center.yml
+  certifications:
+  - SOC 2 Type 2
+  - ISO/IEC 27001:2022
+  - GDPR

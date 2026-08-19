@@ -1,0 +1,1131 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "YouScan Data Import Statistics API",
+    "version": "1.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "X-API-KEY",
+      "value": "{{X-API-KEY}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Statistics",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Sentiment",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/sentiments",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by sentiment."
+        },
+        {
+          "info": {
+            "name": "Tags",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/tags",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of tags returned."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by tags."
+        },
+        {
+          "info": {
+            "name": "Word cloud",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/words",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of words returned."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Top words mentioned together with the topic."
+        },
+        {
+          "info": {
+            "name": "Countries",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/countries",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of countries returned."
+              },
+              {
+                "name": "sourcesSize",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of sources returned for each country."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by country, including per-country sentiment, top sources, authors count and engagement.\n"
+        },
+        {
+          "info": {
+            "name": "Cities",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/cities",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of cities returned."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by city."
+        },
+        {
+          "info": {
+            "name": "Sentiment by regions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/regions-sentiments",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of regions returned."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by region with sentiment breakdown."
+        },
+        {
+          "info": {
+            "name": "Sentiment by sources",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/sources-sentiments",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of sources returned."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by source with sentiment breakdown."
+        },
+        {
+          "info": {
+            "name": "Sentiment by sources by regions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/regions-sources-sentiments",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "regionsSize",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of regions returned."
+              },
+              {
+                "name": "sourcesSize",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of sources returned for each region."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by region, broken down by sources with sentiment."
+        },
+        {
+          "info": {
+            "name": "Histogram",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/histogram",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "interval",
+                "value": "",
+                "type": "query",
+                "description": "Histogram interval."
+              },
+              {
+                "name": "sentiment",
+                "value": "",
+                "type": "query",
+                "description": "Whether to include sentiment distribution."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Mentions count, authors count, engagement, and optionally sentiment per date interval for a period. When `interval` is `day`, the requested period must be less than 3 months.\n"
+        },
+        {
+          "info": {
+            "name": "Genders",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/genders",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by author gender."
+        },
+        {
+          "info": {
+            "name": "Ages",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/ages",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Distribution of mentions by author age."
+        },
+        {
+          "info": {
+            "name": "Links",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/links",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of links and hosts returned."
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Sorting criteria."
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Get statistics for top links and hosts (domains)."
+        },
+        {
+          "info": {
+            "name": "Engagement metrics",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/statistics/metrics",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - today.\n"
+              },
+              {
+                "name": "country",
+                "value": "us,ua",
+                "type": "query",
+                "description": "Filter mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "excludeCountry",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by ISO alpha-2 country codes. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "sources",
+                "value": "telegram.me,youscan.io",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag IDs. Multiple values are supported."
+              },
+              {
+                "name": "excludeTag",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag IDs. Multiple values are supported."
+              }
+            ]
+          },
+          "docs": "Summary engagement metrics for mentions matching the filters."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

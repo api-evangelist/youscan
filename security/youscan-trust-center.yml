@@ -1,0 +1,63 @@
+generated: '2026-08-13'
+method: searched
+probe: true
+source: https://trust.youscan.io/
+url: https://trust.youscan.io/
+platform: SafeBase Trust Center
+description: >-
+  YouScan runs a public SafeBase trust center at trust.youscan.io covering its certifications,
+  security control families, risk profile and document library. Certificates are named on the
+  public page; the underlying reports (SOC 2 Type 2 report, pentest report, GDPR documents) are
+  behind a "Get access" request form.
+certifications:
+- name: SOC 2 Type 2
+  id: soc2-type2
+  status: certified
+  evidence_public: true
+  report_gated: true
+- name: ISO/IEC 27001:2022
+  id: iso-27001-2022
+  status: certified
+  evidence_public: true
+  report_gated: true
+- name: GDPR
+  id: gdpr
+  status: compliant
+  evidence_public: true
+  report_gated: true
+  note: GDPR document set listed under Certificates; a GDPR request form is published at https://youscan.io/gdpr-request/
+documents:
+  access: request-gated
+  categories:
+  - Reports (Pentest Report)
+  - Certificates (GDPR)
+  - Data Security (access monitoring, data asset classification, backups, encryption at rest,
+    encryption in transit, information disclosure protection, media retention, media protection,
+    physical media disposal, physical security)
+  - App Security (application penetration testing, code analysis, credential management)
+  - Legal (subprocessors, cyber insurance, master services agreement)
+  - Access Control (access log management, automated account management, internal SSO)
+  - Infrastructure (status monitoring, endpoint security, anti-malware, disk encryption, DNS filtering)
+  - Network Security (bot detection, DLP, anti-DDoS)
+  - Corporate Security, Policies, Incident Response, Risk Management, Asset Management, BC/DR,
+    Training, Change Management, Physical & Environment, Continuous Monitoring
+risk_profile:
+  impact_level: Low
+  third_party_dependence: true
+  hosting: Major Cloud Provider
+contacts:
+  trust: trust@youscan.io
+  vulnerability_report: security@youscan.io
+related:
+  vulnerability_disclosure: security/youscan-vulnerability-disclosure.yml
+  domain_security: security/youscan-domain-security.yml
+evidence:
+- source: https://trust.youscan.io/
+  status: 200
+  keywords:
+  - SOC 2 Type 2
+  - ISO/IEC 27001:2022
+  - GDPR
+  - Pentest Report
+  - Trust Center
+checked: '2026-08-13'

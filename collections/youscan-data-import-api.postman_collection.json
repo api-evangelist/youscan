@@ -1,0 +1,1456 @@
+{
+  "item": [
+    {
+      "id": "e10b5fb3-3332-472c-8bd4-59e441c6db02",
+      "name": "Data Import",
+      "description": {
+        "content": "The Data Import API allows you to import mentions from external sources into YouScan topics.\nThis feature enables you to bring historical data or mentions from sources not natively\nsupported by YouScan.\n\n**Beta Notice**: This API is currently in beta and may undergo minor changes.\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "144bb226-60ad-405c-bcb4-d1e761f139c4",
+          "name": "Create import",
+          "request": {
+            "name": "Create import",
+            "description": {
+              "content": "Create a new data import job to import mentions into a topic.\n\nMaximum 100,000 mentions per import.\nIf items contain a large amount of data (such as lengthy text content), you may receive\na 413 (Content Too Large) error. In this case, try splitting your batch into smaller ones.\n\n**Each mention must have:**\n- A valid URL (required) — must be an absolute HTTP or HTTPS URL. If you want to import an item\n  without a URL, you should still create a fake unique-per-topic URL (https://mysite.com/1)\n- A published date (required) — cannot be empty\n- At least one content field: title, text, or imageUrl\n\n**Processing:**\n- Mentions are processed asynchronously after the import is created\n- Use the Get Import Status endpoint to track progress\n- Failed mentions can be retrieved using the Get Import Errors endpoint\n- Duplicate mentions (same URL) will be rejected with error code \"Duplicate\"\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "imports"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mentions\": [\n    {\n      \"url\": \"<string>\",\n      \"published\": \"<dateTime>\",\n      \"text\": \"<string>\",\n      \"title\": \"<string>\",\n      \"postId\": \"<string>\",\n      \"parentPostId\": \"<string>\",\n      \"discussionId\": \"<string>\",\n      \"originId\": \"<string>\",\n      \"source\": \"<string>\",\n      \"postType\": \"<string>\",\n      \"sourceType\": \"<string>\",\n      \"contentTypes\": [\n        \"<string>\",\n        \"<string>\"\n      ],\n      \"tagIds\": [\n        \"<integer>\",\n        \"<integer>\"\n      ],\n      \"subcategoryIds\": [\n        \"<integer>\",\n        \"<integer>\"\n      ],\n      \"sourceSpecificFormat\": \"<string>\",\n      \"author\": {\n        \"profileId\": \"<string>\",\n        \"name\": \"<string>\",\n        \"nickname\": \"<string>\",\n        \"description\": \"<string>\",\n        \"url\": \"<string>\",\n        \"avatarUrl\": \"<string>\",\n        \"subscribers\": \"<integer>\",\n        \"gender\": \"<string>\",\n        \"isVerified\": \"<boolean>\",\n        \"geo\": {\n          \"countryCode\": \"<string>\",\n          \"country\": \"<string>\",\n          \"city\": \"<string>\"\n        }\n      },\n      \"channel\": {\n        \"profileId\": \"<string>\",\n        \"name\": \"<string>\",\n        \"nickname\": \"<string>\",\n        \"description\": \"<string>\",\n        \"url\": \"<string>\",\n        \"avatarUrl\": \"<string>\",\n        \"subscribers\": \"<integer>\",\n        \"gender\": \"<string>\",\n        \"isVerified\": \"<boolean>\",\n        \"geo\": {\n          \"countryCode\": \"<string>\",\n          \"country\": \"<string>\",\n          \"city\": \"<string>\"\n        }\n      },\n      \"engagement\": {\n        \"likes\": \"<integer>\",\n        \"comments\": \"<integer>\",\n        \"shares\": \"<integer>\",\n        \"views\": \"<integer>\",\n        \"reactions\": \"<integer>\",\n        \"reach\": \"<integer>\",\n        \"impressions\": \"<integer>\",\n        \"saves\": \"<integer>\"\n      },\n      \"mentionGeo\": {\n        \"countryCode\": \"<string>\",\n        \"country\": \"<string>\",\n        \"city\": \"<string>\"\n      },\n      \"imageUrl\": \"<string>\",\n      \"rating\": \"<number>\",\n      \"language\": \"<string>\"\n    }\n  ],\n  \"name\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "92255d57-4579-4bd4-9bf0-20af18e63194",
+              "name": "Import created.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Q4 2024 Customer Feedback\",\n  \"mentions\": [\n    {\n      \"url\": \"https://example.com/post/123\",\n      \"published\": \"2024-12-15T10:30:00Z\",\n      \"text\": \"Great product! I love using it every day.\",\n      \"title\": \"Customer Review\",\n      \"postId\": \"post-123\",\n      \"parentPostId\": \"thread-456\",\n      \"discussionId\": \"discussion-789\",\n      \"originId\": \"origin-000\",\n      \"source\": \"example.com\",\n      \"postType\": \"Post\",\n      \"sourceType\": \"Reviews\",\n      \"contentTypes\": [\n        \"Text\",\n        \"Image\"\n      ],\n      \"tagIds\": [\n        1,\n        2\n      ],\n      \"author\": {\n        \"profileId\": \"user-123\",\n        \"name\": \"John Doe\",\n        \"nickname\": \"johndoe\",\n        \"description\": \"Tech enthusiast and product reviewer\",\n        \"url\": \"https://example.com/users/johndoe\",\n        \"avatarUrl\": \"https://example.com/avatars/johndoe.jpg\",\n        \"subscribers\": 1500,\n        \"gender\": \"M\",\n        \"isVerified\": true,\n        \"geo\": {\n          \"countryCode\": \"US\",\n          \"country\": \"United States\",\n          \"city\": \"New York\"\n        }\n      },\n      \"channel\": {\n        \"profileId\": \"channel-456\",\n        \"name\": \"Product Reviews\",\n        \"nickname\": \"productreviews\",\n        \"url\": \"https://example.com/channels/productreviews\",\n        \"avatarUrl\": \"https://example.com/avatars/channel.jpg\",\n        \"subscribers\": 50000,\n        \"isVerified\": true\n      },\n      \"engagement\": {\n        \"likes\": 42,\n        \"comments\": 5,\n        \"shares\": 3,\n        \"views\": 1250,\n        \"reactions\": 50,\n        \"reach\": 5000,\n        \"impressions\": 7500,\n        \"saves\": 723\n      },\n      \"mentionGeo\": {\n        \"countryCode\": \"US\",\n        \"country\": \"United States\",\n        \"city\": \"San Francisco\"\n      },\n      \"imageUrl\": \"https://example.com/images/product.jpg\",\n      \"rating\": 4.5,\n      \"language\": \"eng\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "URL of the created import.",
+                  "key": "Location",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"importId\": 12345678,\n  \"name\": \"Q4 2024 Customer Feedback\",\n  \"totalReceived\": 1,\n  \"status\": \"pending\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b5fc316a-47aa-4933-8923-5d8989e5b1a1",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Q4 2024 Customer Feedback\",\n  \"mentions\": [\n    {\n      \"url\": \"https://example.com/post/123\",\n      \"published\": \"2024-12-15T10:30:00Z\",\n      \"text\": \"Great product! I love using it every day.\",\n      \"title\": \"Customer Review\",\n      \"postId\": \"post-123\",\n      \"parentPostId\": \"thread-456\",\n      \"discussionId\": \"discussion-789\",\n      \"originId\": \"origin-000\",\n      \"source\": \"example.com\",\n      \"postType\": \"Post\",\n      \"sourceType\": \"Reviews\",\n      \"contentTypes\": [\n        \"Text\",\n        \"Image\"\n      ],\n      \"tagIds\": [\n        1,\n        2\n      ],\n      \"author\": {\n        \"profileId\": \"user-123\",\n        \"name\": \"John Doe\",\n        \"nickname\": \"johndoe\",\n        \"description\": \"Tech enthusiast and product reviewer\",\n        \"url\": \"https://example.com/users/johndoe\",\n        \"avatarUrl\": \"https://example.com/avatars/johndoe.jpg\",\n        \"subscribers\": 1500,\n        \"gender\": \"M\",\n        \"isVerified\": true,\n        \"geo\": {\n          \"countryCode\": \"US\",\n          \"country\": \"United States\",\n          \"city\": \"New York\"\n        }\n      },\n      \"channel\": {\n        \"profileId\": \"channel-456\",\n        \"name\": \"Product Reviews\",\n        \"nickname\": \"productreviews\",\n        \"url\": \"https://example.com/channels/productreviews\",\n        \"avatarUrl\": \"https://example.com/avatars/channel.jpg\",\n        \"subscribers\": 50000,\n        \"isVerified\": true\n      },\n      \"engagement\": {\n        \"likes\": 42,\n        \"comments\": 5,\n        \"shares\": 3,\n        \"views\": 1250,\n        \"reactions\": 50,\n        \"reach\": 5000,\n        \"impressions\": 7500,\n        \"saves\": 723\n      },\n      \"mentionGeo\": {\n        \"countryCode\": \"US\",\n        \"country\": \"United States\",\n        \"city\": \"San Francisco\"\n      },\n      \"imageUrl\": \"https://example.com/images/product.jpg\",\n      \"rating\": 4.5,\n      \"language\": \"eng\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e925141e-3b72-4cbb-966a-67d7986804b3",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Q4 2024 Customer Feedback\",\n  \"mentions\": [\n    {\n      \"url\": \"https://example.com/post/123\",\n      \"published\": \"2024-12-15T10:30:00Z\",\n      \"text\": \"Great product! I love using it every day.\",\n      \"title\": \"Customer Review\",\n      \"postId\": \"post-123\",\n      \"parentPostId\": \"thread-456\",\n      \"discussionId\": \"discussion-789\",\n      \"originId\": \"origin-000\",\n      \"source\": \"example.com\",\n      \"postType\": \"Post\",\n      \"sourceType\": \"Reviews\",\n      \"contentTypes\": [\n        \"Text\",\n        \"Image\"\n      ],\n      \"tagIds\": [\n        1,\n        2\n      ],\n      \"author\": {\n        \"profileId\": \"user-123\",\n        \"name\": \"John Doe\",\n        \"nickname\": \"johndoe\",\n        \"description\": \"Tech enthusiast and product reviewer\",\n        \"url\": \"https://example.com/users/johndoe\",\n        \"avatarUrl\": \"https://example.com/avatars/johndoe.jpg\",\n        \"subscribers\": 1500,\n        \"gender\": \"M\",\n        \"isVerified\": true,\n        \"geo\": {\n          \"countryCode\": \"US\",\n          \"country\": \"United States\",\n          \"city\": \"New York\"\n        }\n      },\n      \"channel\": {\n        \"profileId\": \"channel-456\",\n        \"name\": \"Product Reviews\",\n        \"nickname\": \"productreviews\",\n        \"url\": \"https://example.com/channels/productreviews\",\n        \"avatarUrl\": \"https://example.com/avatars/channel.jpg\",\n        \"subscribers\": 50000,\n        \"isVerified\": true\n      },\n      \"engagement\": {\n        \"likes\": 42,\n        \"comments\": 5,\n        \"shares\": 3,\n        \"views\": 1250,\n        \"reactions\": 50,\n        \"reach\": 5000,\n        \"impressions\": 7500,\n        \"saves\": 723\n      },\n      \"mentionGeo\": {\n        \"countryCode\": \"US\",\n        \"country\": \"United States\",\n        \"city\": \"San Francisco\"\n      },\n      \"imageUrl\": \"https://example.com/images/product.jpg\",\n      \"rating\": 4.5,\n      \"language\": \"eng\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "006da7d4-1976-4940-b0af-b20fa37ada51",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Q4 2024 Customer Feedback\",\n  \"mentions\": [\n    {\n      \"url\": \"https://example.com/post/123\",\n      \"published\": \"2024-12-15T10:30:00Z\",\n      \"text\": \"Great product! I love using it every day.\",\n      \"title\": \"Customer Review\",\n      \"postId\": \"post-123\",\n      \"parentPostId\": \"thread-456\",\n      \"discussionId\": \"discussion-789\",\n      \"originId\": \"origin-000\",\n      \"source\": \"example.com\",\n      \"postType\": \"Post\",\n      \"sourceType\": \"Reviews\",\n      \"contentTypes\": [\n        \"Text\",\n        \"Image\"\n      ],\n      \"tagIds\": [\n        1,\n        2\n      ],\n      \"author\": {\n        \"profileId\": \"user-123\",\n        \"name\": \"John Doe\",\n        \"nickname\": \"johndoe\",\n        \"description\": \"Tech enthusiast and product reviewer\",\n        \"url\": \"https://example.com/users/johndoe\",\n        \"avatarUrl\": \"https://example.com/avatars/johndoe.jpg\",\n        \"subscribers\": 1500,\n        \"gender\": \"M\",\n        \"isVerified\": true,\n        \"geo\": {\n          \"countryCode\": \"US\",\n          \"country\": \"United States\",\n          \"city\": \"New York\"\n        }\n      },\n      \"channel\": {\n        \"profileId\": \"channel-456\",\n        \"name\": \"Product Reviews\",\n        \"nickname\": \"productreviews\",\n        \"url\": \"https://example.com/channels/productreviews\",\n        \"avatarUrl\": \"https://example.com/avatars/channel.jpg\",\n        \"subscribers\": 50000,\n        \"isVerified\": true\n      },\n      \"engagement\": {\n        \"likes\": 42,\n        \"comments\": 5,\n        \"shares\": 3,\n        \"views\": 1250,\n        \"reactions\": 50,\n        \"reach\": 5000,\n        \"impressions\": 7500,\n        \"saves\": 723\n      },\n      \"mentionGeo\": {\n        \"countryCode\": \"US\",\n        \"country\": \"United States\",\n        \"city\": \"San Francisco\"\n      },\n      \"imageUrl\": \"https://example.com/images/product.jpg\",\n      \"rating\": 4.5,\n      \"language\": \"eng\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e815103b-6f6b-4e50-99b1-916d6c69404b",
+              "name": "Request payload is too large. Split your batch into smaller ones.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Q4 2024 Customer Feedback\",\n  \"mentions\": [\n    {\n      \"url\": \"https://example.com/post/123\",\n      \"published\": \"2024-12-15T10:30:00Z\",\n      \"text\": \"Great product! I love using it every day.\",\n      \"title\": \"Customer Review\",\n      \"postId\": \"post-123\",\n      \"parentPostId\": \"thread-456\",\n      \"discussionId\": \"discussion-789\",\n      \"originId\": \"origin-000\",\n      \"source\": \"example.com\",\n      \"postType\": \"Post\",\n      \"sourceType\": \"Reviews\",\n      \"contentTypes\": [\n        \"Text\",\n        \"Image\"\n      ],\n      \"tagIds\": [\n        1,\n        2\n      ],\n      \"author\": {\n        \"profileId\": \"user-123\",\n        \"name\": \"John Doe\",\n        \"nickname\": \"johndoe\",\n        \"description\": \"Tech enthusiast and product reviewer\",\n        \"url\": \"https://example.com/users/johndoe\",\n        \"avatarUrl\": \"https://example.com/avatars/johndoe.jpg\",\n        \"subscribers\": 1500,\n        \"gender\": \"M\",\n        \"isVerified\": true,\n        \"geo\": {\n          \"countryCode\": \"US\",\n          \"country\": \"United States\",\n          \"city\": \"New York\"\n        }\n      },\n      \"channel\": {\n        \"profileId\": \"channel-456\",\n        \"name\": \"Product Reviews\",\n        \"nickname\": \"productreviews\",\n        \"url\": \"https://example.com/channels/productreviews\",\n        \"avatarUrl\": \"https://example.com/avatars/channel.jpg\",\n        \"subscribers\": 50000,\n        \"isVerified\": true\n      },\n      \"engagement\": {\n        \"likes\": 42,\n        \"comments\": 5,\n        \"shares\": 3,\n        \"views\": 1250,\n        \"reactions\": 50,\n        \"reach\": 5000,\n        \"impressions\": 7500,\n        \"saves\": 723\n      },\n      \"mentionGeo\": {\n        \"countryCode\": \"US\",\n        \"country\": \"United States\",\n        \"city\": \"San Francisco\"\n      },\n      \"imageUrl\": \"https://example.com/images/product.jpg\",\n      \"rating\": 4.5,\n      \"language\": \"eng\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Request Entity Too Large",
+              "code": 413,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "90544615-ed1b-42e5-80a8-b12f79aba32f",
+          "name": "List imports",
+          "request": {
+            "name": "List imports",
+            "description": {
+              "content": "Get a list of all imports for a topic, optionally filtered by status.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "imports"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "status",
+                  "value": "<string>",
+                  "description": "Filter by status."
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "daa99cf4-7fc2-4e35-b577-a267bbd7e240",
+              "name": "Imports of the topic.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"imports\": [\n    {\n      \"importId\": 12345678,\n      \"name\": \"Q4 2024 Customer Feedback\",\n      \"totalMentions\": 100,\n      \"savedCount\": 100,\n      \"failedCount\": 0,\n      \"status\": \"Completed\",\n      \"createdAt\": \"2024-12-15T10:00:00Z\",\n      \"startedAt\": \"2024-12-15T10:01:00Z\",\n      \"completedAt\": \"2024-12-15T10:15:00Z\",\n      \"lastError\": null\n    },\n    {\n      \"importId\": 12345679,\n      \"name\": \"LinkedIn Campaign Data\",\n      \"totalMentions\": 50,\n      \"savedCount\": 25,\n      \"failedCount\": 0,\n      \"status\": \"Processing\",\n      \"createdAt\": \"2024-12-15T11:00:00Z\",\n      \"startedAt\": \"2024-12-15T11:01:00Z\",\n      \"completedAt\": null,\n      \"lastError\": null\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c746bc7f-1549-49c7-aaef-1b4c046dab47",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "73aca367-a597-4072-a90e-5d165b5ab9ce",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "e60b2b55-beda-4bf5-a628-e4c3b071fc99",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "08269c34-b977-410d-b43f-ee6fc04477ce",
+          "name": "Get import status",
+          "request": {
+            "name": "Get import status",
+            "description": {
+              "content": "Get the current status of a data import job.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "imports",
+                ":importId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "importId",
+                  "description": "(Required) ID of the Import."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "fb1bd23e-d330-408b-a7b2-69f9e67ba52a",
+              "name": "Import status.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"importId\": 12345678,\n  \"name\": \"Q4 2024 Customer Feedback\",\n  \"totalMentions\": 100,\n  \"savedCount\": 85,\n  \"failedCount\": 5,\n  \"status\": \"Processing\",\n  \"createdAt\": \"2024-12-15T10:00:00Z\",\n  \"startedAt\": \"2024-12-15T10:01:00Z\",\n  \"completedAt\": null,\n  \"lastError\": null\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a7506c99-01ee-4065-965b-a937e26960df",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "a0fa41e3-1077-482e-a917-d96ae1f4cc19",
+              "name": "Import not found, or the topic isn't found or accessible.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"RESOURCE_NOT_FOUND\",\n  \"message\": \"Import not found\",\n  \"resourceType\": \"Import\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "3cd140fc-028a-4a3e-b7e3-cc680dec6bc1",
+          "name": "Abort import",
+          "request": {
+            "name": "Abort import",
+            "description": {
+              "content": "Abort a running import job. Only imports in \"Pending\" or \"Processing\" status can be aborted.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "imports",
+                ":importId",
+                "abort"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "importId",
+                  "description": "(Required) ID of the Import."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "c660f0b3-2b80-47e0-af0a-20ed3d7185d3",
+              "name": "Abort requested.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId",
+                    "abort"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"importId\": 12345678,\n  \"status\": \"Aborting in progress\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "378b6122-64b0-460e-a2bc-1984f8b25381",
+              "name": "Import cannot be aborted in its current status.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId",
+                    "abort"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"IMPORT_NOT_ABORTABLE\",\n  \"message\": \"Import can only be aborted when it is in Pending or Processing status\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7ba23e1b-6362-4e2f-a63b-049d70ff0cd8",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId",
+                    "abort"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "5993eb3d-0a51-4192-8b0b-499d544c1de8",
+              "name": "Import not found, or the topic isn't found or accessible.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId",
+                    "abort"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"RESOURCE_NOT_FOUND\",\n  \"message\": \"Import not found\",\n  \"resourceType\": \"Import\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "598df550-c501-45b3-8ed2-525ff2ad9adc",
+          "name": "Get import errors",
+          "request": {
+            "name": "Get import errors",
+            "description": {
+              "content": "Get a list of errors that occurred during the import process.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "imports",
+                ":importId",
+                "errors"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                },
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "importId",
+                  "description": "(Required) ID of the Import."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "a25a0c4c-c4a1-4d18-973e-73f4da43b18f",
+              "name": "Import errors.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId",
+                    "errors"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errors\": [\n    {\n      \"permaLink\": \"https://example.com/post/1\",\n      \"error\": \"Save failed with status: Duplicate\",\n      \"attemptCount\": 1,\n      \"createdAt\": \"2024-12-15T10:05:00Z\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0ab8678c-0f65-45c1-9968-49c60830aa75",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId",
+                    "errors"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "0dd7ad53-87d5-4af9-b759-bc60df8b8d64",
+              "name": "Import not found, or the topic isn't found or accessible.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "imports",
+                    ":importId",
+                    "errors"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    },
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "importId",
+                      "description": "(Required) ID of the Import."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"RESOURCE_NOT_FOUND\",\n  \"message\": \"Import not found\",\n  \"resourceType\": \"Import\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.youscan.io/api/external",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-KEY"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "d926bb6b-9d50-4a27-b62b-fa55ae387b19",
+    "name": "YouScan Data Import API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n\n\nContact Support:\n Name: YouScan Support",
+      "type": "text/plain"
+    }
+  }
+}

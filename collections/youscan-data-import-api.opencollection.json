@@ -1,0 +1,149 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "YouScan Data Import API",
+    "version": "1.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "X-API-KEY",
+      "value": "{{X-API-KEY}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Data Import",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List imports",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/imports",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by status."
+              }
+            ]
+          },
+          "docs": "Get a list of all imports for a topic, optionally filtered by status."
+        },
+        {
+          "info": {
+            "name": "Create import",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/imports",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create a new data import job to import mentions into a topic.\n\nMaximum 100,000 mentions per import.\nIf items contain a large amount of data (such as lengthy text content), you may receive\na 413 (Content Too Large) error. In this case, try splitting your batch into smaller ones.\n\n**Each mention must have:**\n- A valid URL (required) — must be an absolute HTTP or HTTPS URL. If you want to import an item\n  without a URL, you should still create a fake unique-per-topic URL (https://mysite.com/1)\n- A "
+        },
+        {
+          "info": {
+            "name": "Get import status",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/imports/:importId",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "importId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Import."
+              }
+            ]
+          },
+          "docs": "Get the current status of a data import job."
+        },
+        {
+          "info": {
+            "name": "Abort import",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/imports/:importId/abort",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "importId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Import."
+              }
+            ]
+          },
+          "docs": "Abort a running import job. Only imports in \"Pending\" or \"Processing\" status can be aborted."
+        },
+        {
+          "info": {
+            "name": "Get import errors",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/imports/:importId/errors",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "importId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Import."
+              }
+            ]
+          },
+          "docs": "Get a list of errors that occurred during the import process."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

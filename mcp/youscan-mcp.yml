@@ -2,11 +2,9 @@ generated: '2026-07-21'
 method: derived
 source: openapi/youscan-openapi.yaml
 status: candidate
-summary: >-
-  No official hosted or remote MCP server was found for YouScan (searched the docs,
-  developers.youscan.io, GitHub org, and the MCP registry). The tool list below is a
-  DERIVED candidate mapping of read-oriented YouScan API operations to MCP tools, for
-  reference only — not a published server.
+summary: No official hosted or remote MCP server was found for YouScan (searched the docs, developers.youscan.io,
+  GitHub org, and the MCP registry). The tool list below is a DERIVED candidate mapping of read-oriented
+  YouScan API operations to MCP tools, for reference only — not a published server.
 server:
   name: youscan
   official: false
@@ -55,8 +53,41 @@ tools:
   method: GET
   path: /topics/{topicId}/tags
   description: List tags configured on a topic.
-notes: >-
-  Only read/query operations are surfaced as candidate tools; write operations
-  (create/delete topic, bulk-update mentions, imports) are intentionally omitted from
-  the default candidate surface. Promote to status: published only if YouScan ships an
-  official MCP server.
+notes: 'Only read/query operations are surfaced as candidate tools; write operations (create/delete topic,
+  bulk-update mentions, imports) are intentionally omitted from the default candidate surface. Promote
+  to status: published only if YouScan ships an official MCP server.'
+deployment:
+  mode: none
+  endpoint: null
+  install: null
+  package: null
+  auth: unknown
+  verified: derived
+  tools: 8
+  checked: '2026-08-13'
+  source: catalog MCP census + 2026-08-13 re-search
+  re_search:
+    date: '2026-08-13'
+    result: no first-party MCP server exists, hosted or stdio
+    probes:
+    - url: https://mcp.youscan.io/mcp
+      method: 'POST tools/list'
+      status: 000
+      note: host does not resolve
+    - url: https://api.youscan.io/mcp
+      method: 'POST tools/list'
+      status: 404
+    - url: https://developers.youscan.io/mcp
+      method: 'POST tools/list'
+      status: 405
+      note: SPA host method-not-allowed, not an MCP endpoint
+    - url: https://registry.modelcontextprotocol.io/v0/servers?search=youscan
+      status: 200
+      result: 0 servers
+    - registry: npm
+      query: youscan
+      result: 0 packages
+    note: >-
+      Third-party "social listening" MCP servers exist (Syften, Octolens, dwarvesf) but none
+      wrap YouScan, and none are YouScan-published. No endpoint is recorded because inventing
+      one would read as a verified agent surface.

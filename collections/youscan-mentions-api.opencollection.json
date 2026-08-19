@@ -1,0 +1,320 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "YouScan Data Import Mentions API",
+    "version": "1.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "X-API-KEY",
+      "value": "{{X-API-KEY}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Mentions",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List mentions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/mentions",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "from",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions published on or after this date. Format - `yyyy-MM-ddThh:mm:ss`, with an optional UTC offset. Without an offset the value is interpreted in the `timeZone` parameter's zone, which defaults to the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+              },
+              {
+                "name": "to",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions published till the `to` date, **inclusive**: the effective upper bound is `to` plus one day. `to=2018-06-08` includes the whole of June 8; `to=2018-06-08T04:20Z` includes mentions up to (but excluding) June 9, 04:20Z. Format and time zone interpretation are the same as for `from`. Default - today.\n"
+              },
+              {
+                "name": "addedFrom",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions that were added to the topic after this date. Format - `yyyy-MM-ddThh:mm:ss`. Unlike `published`, this is the moment YouScan saved the mention — useful for catching mentions collected with a delay. Note: unlike `to`, `addedTo` is not extended by a day.\n"
+              },
+              {
+                "name": "addedTo",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions that were added to the topic before this date. Format - `yyyy-MM-ddThh:mm:ss`."
+              },
+              {
+                "name": "sinceSeq",
+                "value": "",
+                "type": "query",
+                "description": "Cursor filter: return only mentions with `seq` greater than this value (exclusive). Combine with `orderBy=seqAsc` and pass the highest `seq` from the previous page — see *How to effectively retrieve large sets of mentions* for the full loop.\n"
+              },
+              {
+                "name": "sentiment",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions matching the specified sentiment. Multiple values are supported."
+              },
+              {
+                "name": "excludeSentiment",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions matching the specified sentiment. Multiple values are supported."
+              },
+              {
+                "name": "engagementFrom",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions with engagement count greater than or equal to this value."
+              },
+              {
+                "name": "engagementTo",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions with engagement count less than or equal to this value."
+              },
+              {
+                "name": "engagementCollectedFrom",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions where engagement data was collected after this date. Format - `yyyy-MM-ddThh:mm:ss`."
+              },
+              {
+                "name": "engagementCollectedTo",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions where engagement data was collected before this date. Format - `yyyy-MM-ddThh:mm:ss`."
+              },
+              {
+                "name": "sources",
+                "value": "youscan.io,telegram.me",
+                "type": "query",
+                "description": "Filter mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "excludeSources",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source. Multiple values are supported."
+              },
+              {
+                "name": "sourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "excludeSourceTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by source type. Multiple values are supported."
+              },
+              {
+                "name": "postTypes",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by post type. Multiple values are supported."
+              },
+              {
+                "name": "excludePostTypes",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by post type. Multiple values are supported."
+              },
+              {
+                "name": "tags",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by tag names. Multiple values are supported. Returns a validation error if a tag with the given name does not exist in the topic.\n"
+              },
+              {
+                "name": "excludeTags",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by tag names. Multiple values are supported."
+              },
+              {
+                "name": "autoCategories",
+                "value": "",
+                "type": "query",
+                "description": "Filter mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/). Multiple values are supported.\n"
+              },
+              {
+                "name": "excludeAutoCategories",
+                "value": "",
+                "type": "query",
+                "description": "Exclude mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/). Multiple values are supported.\n"
+              },
+              {
+                "name": "starred",
+                "value": "",
+                "type": "query",
+                "description": "Use `true` to get only starred mentions."
+              },
+              {
+                "name": "tagged",
+                "value": "",
+                "type": "query",
+                "description": "Use `true` to get mentions containing any tag. Use `false` to get mentions without any tags. Omit the parameter to get all mentions regardless of tags.\n"
+              },
+              {
+                "name": "processed",
+                "value": "",
+                "type": "query",
+                "description": "Use `true` to get processed mentions. Use `false` to get unprocessed mentions. Omit the parameter to get all mentions regardless of processed status.\n"
+              },
+              {
+                "name": "deleted",
+                "value": "",
+                "type": "query",
+                "description": "Use `true` to get mentions that were moved to Bin."
+              },
+              {
+                "name": "spam",
+                "value": "",
+                "type": "query",
+                "description": "Use `true` to get mentions that were marked as spam."
+              },
+              {
+                "name": "textQuery",
+                "value": "",
+                "type": "query",
+                "description": "Additionally filter mentions by a text query using YouScan query syntax."
+              },
+              {
+                "name": "dedup",
+                "value": "",
+                "type": "query",
+                "description": "Use `true` to group near-duplicate mentions by text and return only one mention per group."
+              },
+              {
+                "name": "htmlSanitize",
+                "value": "",
+                "type": "query",
+                "description": "Whether to sanitize mention text to be consumed as HTML. Use `false` to get raw unescaped text.\n"
+              },
+              {
+                "name": "timeZone",
+                "value": "",
+                "type": "query",
+                "description": "IANA time zone identifier (e.g. `Europe/Kyiv`) used to interpret date parameters that have no explicit offset. Defaults to the API key owner's time zone. To reproduce the numbers a platform user sees in the UI, pass that user's time zone here.\n"
+              },
+              {
+                "name": "size",
+                "value": "",
+                "type": "query",
+                "description": "Limits the number of mentions per page. Default - 10, maximum - 1000. The response `total` field tells how many mentions match in total — if it exceeds `size`, paginate with the `sinceSeq` cursor.\n"
+              },
+              {
+                "name": "skip",
+                "value": "",
+                "type": "query",
+                "description": "Number of mentions to skip. Used for paging; must be less than 10000. To page deeper than that, use the `sinceSeq` cursor instead.\n"
+              },
+              {
+                "name": "orderBy",
+                "value": "",
+                "type": "query",
+                "description": "Sorting field."
+              }
+            ]
+          },
+          "docs": "Use this action to retrieve mentions matching criteria.\n\nThis endpoint is rate limited: no more than 10 requests per 10 seconds and no more than\n5 concurrent requests per user. Requests beyond those limits are rejected with a 429 status code.\n"
+        },
+        {
+          "info": {
+            "name": "Get mentions by IDs",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/get-mentions",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              },
+              {
+                "name": "ids",
+                "value": "",
+                "type": "query",
+                "description": "Mention IDs. Multiple values are supported. Maximum 500 IDs per request."
+              },
+              {
+                "name": "timeZone",
+                "value": "",
+                "type": "query",
+                "description": "IANA time zone identifier used to convert mention dates in the response. Defaults to the API key owner's time zone."
+              }
+            ]
+          },
+          "docs": "Retrieve specific mentions by their IDs. Maximum 500 IDs per request."
+        },
+        {
+          "info": {
+            "name": "Get mentions by IDs (POST)",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/get-mentions",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Same as the GET variant, but accepts the IDs in the request body — useful when the list of IDs is too long for a URL. Maximum 500 IDs per request.\n"
+        },
+        {
+          "info": {
+            "name": "Bulk update mentions",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/mentions/bulkupdate",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update mentions' `tags` and `sentiment`, mark them as spam, or remove them. Maximum 100 mentions per request.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

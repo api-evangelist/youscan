@@ -1,0 +1,125 @@
+specification: API Commons Plans
+specificationVersion: '0.1'
+provider: YouScan
+providerId: youscan
+generated: '2026-08-13'
+method: searched
+source: https://youscan.io/pricing/
+created: '2026-08-13'
+modified: '2026-08-13'
+sources:
+- https://youscan.io/pricing/
+- https://help.youscan.io/en/articles/2754452-how-to-use-youscan-api
+tags:
+- Social Media Listening
+- Consumer Insights
+- Analytics
+description: >-
+  YouScan publishes two plan tiers. Only STARTER carries a listed price; the "Unlimited"
+  tier is quote-based behind a demo request. Critically for this catalog: API ACCESS IS NOT
+  PART OF THE PRICED TIER. The pricing page lists "data export options and API access" only
+  under the Unlimited (quote-based) plan, and the knowledge base states plainly that "API data
+  access is available as a paid add-on. Please contact your Customer Success Manager or email
+  us at support@youscan.io." So there is NO published price for API access at any tier.
+plan_count: 2
+priced_plan_count: 1
+api_access:
+  publicly_priced: false
+  model: paid add-on, quote only
+  gate: Customer Success Manager / support@youscan.io
+  included_in:
+  - Unlimited
+  evidence: https://help.youscan.io/en/articles/2754452-how-to-use-youscan-api
+  note: >-
+    A developer cannot self-serve an API key. Access must be enabled on the account first;
+    the key is then generated in My Settings -> API key.
+currencies:
+- USD
+- EUR
+- GBP
+plans:
+- id: youscan-starter
+  name: STARTER
+  type: subscription
+  positioning: Ideal for SMBs and Startups
+  price: 499
+  prices:
+  - currency: USD
+    amount: 499
+  - currency: EUR
+    amount: 499
+  - currency: GBP
+    amount: 499
+  currency: USD
+  period: month
+  billing: billed annually
+  quota:
+    topics: 3
+    monthly_mentions: 15000
+    insights_copilot_questions_per_month: 10
+    custom_dashboards: 1
+    chat_integrations: 1
+    users: unlimited
+    social_searches: unlimited
+    rules_and_alerts: unlimited
+  included:
+  - 3 topics (text-based search queries)
+  - Up to 15,000 monthly mentions
+  - Full coverage of supported social media, blogs, forums, reviews and online news sources
+  - Insights Copilot AI Agent (10 questions/mo)
+  - Aspect sentiment analysis, trend detection, word clouds
+  - Slack, Microsoft Teams or WhatsApp integration (1 integration per account)
+  - Mention Wall for TVs and big screens
+  - 1 Custom Dashboard
+  - Unlimited users, social searches, rules and alerts
+  api_access: false
+  overage: not published
+- id: youscan-unlimited
+  name: Unlimited
+  type: subscription
+  positioning: Best for Brands and Agencies
+  price: null
+  currency: null
+  period: null
+  billing: quote / request a demo
+  quota:
+    topics: unlimited
+    monthly_mentions: unlimited (sampled)
+    insights_copilot_questions_per_month: unlimited
+    custom_dashboards: unlimited
+  included:
+  - As many topics as you need
+  - Unlimited sampled mentions
+  - Data collection based on text queries, image contents (brand logos) and social audience attributes
+  - Visual Insights (social image analysis)
+  - Audience Insights (demographics, interests, occupations)
+  - Unlimited Insights Copilot questions
+  - Unlimited custom dashboards, data export options and API access
+  - User access rights configured to requirements
+  api_access: true
+  overage: not published
+add_ons:
+- name: Visual Insights
+  priced_publicly: false
+- name: Audience Insights
+  priced_publicly: false
+- name: Insights Copilot
+  priced_publicly: false
+  note: Included with a 10 question/month allowance on STARTER; unlimited on Unlimited.
+- name: API access
+  priced_publicly: false
+  note: Explicitly described in the knowledge base as a paid add-on with no listed price.
+payment_methods:
+- credit card (via Stripe)
+- bank wire transfer
+support:
+  included_all_tiers: Global support team Mon-Fri 06:00-23:00 UTC via chat, email and WhatsApp,
+    plus YouScan Academy, Knowledge Base, webinars and workshops.
+  tier_differentiator: Proactive Customer Success engagement, dedicated CSM, business reviews,
+    onboarding assistance and escalation priority on higher tiers.
+evidence:
+- url: https://youscan.io/pricing/
+  status: 200
+- url: https://help.youscan.io/en/articles/2754452-how-to-use-youscan-api
+  status: 200
+checked: '2026-08-13'

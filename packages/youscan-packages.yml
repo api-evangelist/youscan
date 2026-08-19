@@ -1,10 +1,15 @@
-generated: '2026-07-21'
+generated: '2026-08-13'
 method: searched
-source: npm registry search, PyPI, GitHub org (youscan), developers.youscan.io
+source: registry.npmjs.org search, pypi.org/pypi/youscan/json, api.github.com/orgs/youscan/repos, developers.youscan.io
 summary: >-
-  YouScan publishes no first-party client SDK. The API is a plain REST + API-key
-  surface documented by an OpenAPI 3.1 spec, so integrators call it directly over
-  HTTP. One community-maintained Python wrapper exists on PyPI/GitHub (NOT official).
+  YouScan publishes NO first-party client SDK in any language. The API is a plain REST +
+  API-key surface described by an OpenAPI 3.1 spec, so integrators call it directly over HTTP.
+  A search of the npm registry returns zero packages matching "youscan". The public youscan
+  GitHub organization (48 repos read on 2026-08-13) contains only internal infrastructure,
+  Azure/Kubernetes/Elasticsearch operational tooling and ML forks — no API client library.
+  One community Python wrapper exists on PyPI and it has not been touched in nearly seven years.
+official_sdk_count: 0
+package_count: 1
 packages:
 - name: youscan
   registry: pypi
@@ -12,11 +17,33 @@ packages:
   repository: https://github.com/bzdvdn/youscan-wrapper
   language: python
   official: false
+  version: 0.0.1
+  published: '2019-10-18'
+  release_count: 1
   description: >-
-    Community "Youscan Insight Rest Api wrapper" (bzdvdn/youscan-wrapper) — a
-    third-party Python client for the YouScan API. Not published or endorsed by
-    YouScan.
+    Community "Youscan Insight Rest Api wrapper" (bzdvdn/youscan-wrapper) — a third-party
+    Python client for the YouScan API. Not published or endorsed by YouScan.
+  currency_note: >-
+    DECAY SIGNAL: the only release, 0.0.1, was published 2019-10-18 — nearly seven years
+    before this check and predating most of the API surface it would need to wrap. Every
+    change in changelog/youscan-changelog.yml from 2020-12-09 onward (Countries statistics,
+    cities statistics, addedFrom/addedTo filters, postTypes filters, tagIds on import,
+    /spaces and /spaces/{spaceId}/categories, get-mentions-by-IDs, engagement metrics)
+    landed after this package was last published. Treat it as unmaintained.
+registries_checked:
+- registry: npm
+  query: youscan
+  result: no packages
+  checked: '2026-08-13'
+- registry: pypi
+  query: youscan
+  result: 1 package (community)
+  checked: '2026-08-13'
+- registry: github
+  query: orgs/youscan/repos
+  result: 48 repos, no API client library
+  checked: '2026-08-13'
 notes: >-
-  Searches of npm, PyPI, and the youscan GitHub organization found no first-party
-  client library. The youscan GitHub org contains only internal infrastructure and
-  ML forks, not an API SDK. Integrate against the OpenAPI 3.1 spec directly.
+  No SDKs pointer is emitted in apis.yml. The sdk_count check reads first-party libraries and
+  YouScan ships none; crediting a seven-year-old third-party wrapper would be false. Integrate
+  against openapi/ directly, or generate a client from https://developers.youscan.io/api/openapi.yaml.

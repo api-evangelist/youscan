@@ -1,6 +1,6 @@
-generated: '2026-07-21'
+generated: '2026-08-13'
 method: searched
-source: developers.youscan.io/api/openapi.yaml (Version history), status.youscan.io, help.youscan.io
+source: developers.youscan.io/api/openapi.yaml (Version history), status.youscan.io, help.youscan.io, jsapi.apiary.io/apis/youscan.apib
 summary: >-
   YouScan versions its API informally (info.version 1.0) and communicates changes
   through a dated "Version history" section in the docs rather than semantic version
@@ -27,8 +27,25 @@ status_page:
   - name: Data Ingestion
     uptime_90d: "99.89%"
   subscribe: email, SMS, Slack, RSS/Atom
+docs_migration:
+  from: https://youscan.docs.apiary.io/
+  to: https://developers.youscan.io/api/
+  observed: '2026-08-13'
+  note: >-
+    The youscan.io footer still links "Social Intelligence API" to the legacy Apiary host.
+    That host is now a stub: the API Blueprint at https://jsapi.apiary.io/apis/youscan.apib
+    (HTTP 200) contains only "FORMAT: 1A / HOST: https://api.youscan.io/api/external /
+    ## YouScan / Docs live here now: https://developers.youscan.io/api/", and the Apiary
+    metadata records lastUpdated 2026-06-18 with an empty blueprint and no resource groups.
+    Apiary's anonymous mock server (private-anon-*.apiary-mock.com) therefore mocks nothing.
+    The migration was handled by leaving a forwarding note rather than an HTTP redirect —
+    a stale footer link on the marketing site is the residue.
+  api_access_gate: >-
+    API access is a paid add-on enabled per account; a key is then generated in
+    My Settings -> API key and cannot be viewed twice (see plans/youscan-plans-pricing.yml).
 sla:
   published: false
 support:
   help_center: https://help.youscan.io
   email: support@youscan.io
+  getting_started: https://help.youscan.io/en/articles/2754452-how-to-use-youscan-api

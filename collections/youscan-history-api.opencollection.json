@@ -1,0 +1,87 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "YouScan Data Import History API",
+    "version": "1.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "X-API-KEY",
+      "value": "{{X-API-KEY}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "History",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "History collection details",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/history",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ]
+          },
+          "docs": "Get the status and progress of the historical data collection job for the topic."
+        },
+        {
+          "info": {
+            "name": "Start history collection",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/history",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Start collecting historical mentions for the topic for the given date range."
+        },
+        {
+          "info": {
+            "name": "Stop history collection",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.youscan.io/api/external/topics/:topicId/history/stop",
+            "params": [
+              {
+                "name": "topicId",
+                "value": "",
+                "type": "path",
+                "description": "ID of the Topic."
+              }
+            ]
+          },
+          "docs": "Stop the running historical data collection job."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

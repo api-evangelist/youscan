@@ -1,0 +1,84 @@
+specification: API Commons Rate Limits
+specificationVersion: '0.1'
+provider: YouScan
+providerId: youscan
+generated: '2026-08-13'
+method: searched
+source: https://developers.youscan.io/api/openapi.yaml (info.description "Rate limits" section)
+created: '2026-08-13'
+modified: '2026-08-13'
+sources:
+- https://developers.youscan.io/api/openapi.yaml
+- https://developers.youscan.io/api/
+tags:
+- Rate Limiting
+- Social Media Listening
+description: >-
+  YouScan publishes its limits as GUIDANCE inside the OpenAPI description rather than as a hard
+  contract: "We recommend to use no more than 5 parallel API requests and no more than 10 requests
+  per 10 seconds. Requests beyond those limits might be rejected with 429 status code." The wording
+  is advisory ("recommend", "might be rejected"), so the enforced ceiling is not stated. No
+  rate-limit response headers are documented, and none were observed on a live unauthenticated
+  request — an agent has the number from the docs but NO runtime signal to back off on.
+limit_count: 2
+scope_note: Limits are described per API key; the key is bound to one user in one account.
+limits:
+- name: Parallel requests
+  scope: per-key
+  metric: concurrent_requests
+  limit: 5
+  timeFrame: concurrent
+  window: null
+  burst: null
+  enforcement: advisory ("we recommend")
+  evidence: OpenAPI info.description, Rate limits section
+- name: Request rate
+  scope: per-key
+  metric: requests
+  limit: 10
+  timeFrame: 10s
+  window: 10 seconds
+  burst: null
+  enforcement: advisory ("might be rejected with 429")
+  evidence: OpenAPI info.description, Rate limits section
+responseCodes:
+  throttled: 429
+  throttled_meaning: Too Many Requests
+headers:
+  documented: false
+  observed: false
+  ratelimit_limit: null
+  ratelimit_remaining: null
+  ratelimit_reset: null
+  retry_after: null
+  request_id: null
+  note: >-
+    No X-RateLimit-*, RateLimit-* or Retry-After header is documented anywhere in the OpenAPI or
+    the knowledge base. A live unauthenticated GET https://api.youscan.io/api/external/topics on
+    2026-08-13 returned HTTP 401 with only date, content-length, server (cloudflare),
+    x-content-type-options, x-origin, cf-cache-status, strict-transport-security and cf-ray —
+    no rate-limit or request-id headers of any kind.
+live_probe:
+  url: https://api.youscan.io/api/external/topics
+  method: GET
+  auth: none
+  status: 401
+  observed_headers:
+  - date
+  - content-length
+  - server
+  - x-content-type-options
+  - x-origin
+  - cf-cache-status
+  - strict-transport-security
+  - cf-ray
+  checked: '2026-08-13'
+related:
+  conventions: conventions/youscan-conventions.yml
+  errors: errors/youscan-problem-types.yml
+  plans: plans/youscan-plans-pricing.yml
+gap: >-
+  Emitting RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset (RFC 9331 style) or at minimum
+  Retry-After on the 429 would turn a documented recommendation into a machine-readable runtime
+  signal. This is the highest-value agent-readiness fix on this API.
+checked: '2026-08-13'

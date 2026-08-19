@@ -1,0 +1,129 @@
+generated: '2026-08-13'
+method: probed
+source: live GET of /.well-known/* on every apis.yml baseURL host, the OpenAPI servers[] host, the docs host and the app host
+description: >-
+  YouScan serves NO /.well-known/ discovery documents. Every path was probed on all four
+  hosts on 2026-08-13. api.youscan.io and youscan.io return hard 404s. developers.youscan.io
+  (a Scalar single-page docs app) and app.youscan.io (the product SPA) answer HTTP 200 with
+  an identical text/html application shell for EVERY /.well-known/ path — a catch-all route,
+  not a document — so those 200s are recorded as soft hits and treated as misses.
+  NO WellKnown or SecurityTxt pointer is emitted in apis.yml: the probe records an absence,
+  and an absence must not be scored as a presence.
+hosts:
+- host: https://api.youscan.io
+  note: OpenAPI servers[] host and every apis.yml baseURL host.
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://youscan.io
+  note: Marketing site (Nuxt). Returns a 404 status with an HTML error page.
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://developers.youscan.io
+  note: >-
+    Scalar SPA docs host. Answers 200 with the same 16,339-byte text/html shell for every
+    /.well-known/ path — SOFT HIT, not a document. Recorded, not credited, not saved.
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    real_document: false
+    content_type: text/html
+    note: SPA catch-all shell (identical bytes to every other path on this host).
+  - path: /.well-known/openid-configuration
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/api-catalog
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/agent-card.json
+    status: 200
+    real_document: false
+    content_type: text/html
+    note: Rejected as an A2A agent card — body is the HTML docs shell, not a JSON AgentCard.
+  - path: /.well-known/agent.json
+    status: 200
+    real_document: false
+    content_type: text/html
+    note: Same SPA shell; legacy pre-0.3 agent-card path also a false positive here.
+- host: https://app.youscan.io
+  note: Product SPA. Same soft-200 catch-all behavior (15,735-byte HTML shell on every path).
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/openid-configuration
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/api-catalog
+    status: 200
+    real_document: false
+    content_type: text/html
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    real_document: false
+    content_type: text/html
+summary:
+  real_documents: 0
+  saved_files: []
+  soft_200_shells: 14
+  hard_404s: 14
+related:
+  note: >-
+    YouScan DOES publish a responsible-disclosure channel, just not at /.well-known/security.txt —
+    it is exposed through the SafeBase trust center. See security/youscan-vulnerability-disclosure.yml.
+  llms_txt: >-
+    developers.youscan.io/llms.txt IS served (HTTP 200, 875 bytes, real llms.txt) — captured
+    verbatim in llms/youscan-llms.txt. That path is not under /.well-known/ and is indexed there.

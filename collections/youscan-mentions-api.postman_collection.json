@@ -1,0 +1,2514 @@
+{
+  "item": [
+    {
+      "id": "d7e876ca-2c83-4014-a68e-19dbaf450866",
+      "name": "Mentions",
+      "description": {
+        "content": "Retrieve and update mentions collected in a topic.\n\n### How to effectively retrieve large sets of mentions\n\nCommon scenarios are:\n* Load all the mentions from a given topic for a given period\n* Periodically poll a topic to get new mentions (see the next section)\n\nEvery list response contains:\n\n- `total` — the number of mentions matching your filters, across all pages;\n- `mentions` — one page of results, at most `size` of them (default 10, max 1000);\n- `lastSeq` — a sequence-number high-water mark (see the cursor loop below).\n\nIf `total` exceeds the number of mentions you received, there is more to fetch. Use\nthe `sinceSeq` cursor: every mention has a `seq` number, assigned in the order\nmentions were saved to the topic, and cursor paging over it has no depth limit and\nnever skips or duplicates mentions.\n\nThe cursor loop:\n\n1. Start the session:\n   ```\n   GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&orderBy=seqAsc\n   ```\n   `orderBy=seqAsc` returns mentions in the order they were saved to the topic.\n2. Take the highest `seq` value from the returned `mentions` array and repeat the\n   request with `&sinceSeq={that value}`. `sinceSeq` is exclusive — the next page\n   starts right after it:\n   ```\n   GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&sinceSeq=8541234&orderBy=seqAsc\n   ```\n3. Stop when a response returns fewer than `size` mentions.\n\n### Polling for new mentions\n\nMentions are discovered with a delay — minutes to hours after publication — and\nhistory collection can add much older mentions at any time. Because `from`/`to` filter\nby *publication* date, repeatedly fetching a fixed window such as \"yesterday 22:00 —\ntoday 07:00\" misses every mention that was published inside the window but collected\nafter your request ran; such mentions never show up in any later window either.\n\nPoll with the cursor instead:\n\n1. Run the cursor loop above once and persist the highest `seq` you received.\n2. On every subsequent run, start with `sinceSeq={persisted value}&orderBy=seqAsc`,\n   drain the pages, and persist the new high-water mark.\n\nA mention gets its `seq` when it is saved to the topic, so late-arriving mentions are\nalways picked up by your next poll, no matter when they were published. Two additions:\n\n- If you also need fields that change *after* a mention is saved — engagement counts,\n  corrected sentiment, added tags — periodically re-fetch a trailing window (say, the\n  last 72 hours), or use the `engagementCollectedFrom` / `addedFrom` filters.\n- If you'd rather not poll at all, configure a webhook (see the Webhook section) and\n  receive each new mention the moment it is saved.\n\n### Dates and time zones\n\nDate filters match mentions by their **publication date**. Two rules save a lot of\nconfusion:\n\n- **Date values without an explicit UTC offset are interpreted in the API key owner's\n  time zone** — the time zone configured in the profile of the user the key belongs to.\n  To make requests unambiguous, always pass explicit offsets (`from=2026-06-01T00:00Z`)\n  or set the `timeZone` parameter.\n- **`to` is inclusive**: the effective upper bound is `to` plus one day. `to=2026-06-21`\n  includes the whole of June 21.\n\nThe platform UI always shows periods in the signed-in user's time zone. To reproduce a\nnumber seen in the UI, request the same period with `timeZone` set to that user's zone —\nor convert the period boundaries to UTC yourself.\n\n### Deleted data\n\nThe API returns the current state of the topic at the moment of the request:\n\n- a deleted topic returns `404` (`message: \"Theme not found\"`) — its mentions are no\n  longer accessible;\n- deleted tags disappear from mention responses — there is no \"deleted\" marker;\n- mentions moved to the Bin are excluded unless you pass `deleted=true`.\n\nData you exported earlier is not updated retroactively. If you keep a local copy,\nreconcile it periodically against the current *List topics* and *List tags* responses.\n\n### Data limitations\n\n> **Mentions from Reddit, Quora and several other forums and review websites are not accessible**\n> via the list mentions endpoint.\n\n> **Twitter data limitations**: We are limiting the data which can be accessed for mentions collected\n> from Twitter. The following adjustments are applied:\n> - Mention's Text and Full Text properties are removed\n> - Mention URL is removed\n> - Author URL, Author Name and Author AvatarUrl are removed\n> - Profile ID of the author is added to Author information (the ID itself is the ID of the Twitter Profile)\n> - Post ID is the ID of the Tweet\n> - Combining Profile ID and Post ID allows you to navigate to the exact Tweet which was collected\n>   as the corresponding mention.\n\n### Why API data may differ from the platform UI\n\nThe API and the platform read the same storage — for the same query they return the\nsame data. Almost every reported discrepancy turns out to be one of the causes\ndescribed above:\n\n1. **Time zones.** The UI uses the viewer's time zone; your request may be using a\n   different one — see *Dates and time zones*.\n2. **Sources not available via API.** Reddit, Quora and several other sources are\n   visible in the UI but never returned by the API. Exclude them in the UI search\n   before comparing counts — see *Data limitations*.\n3. **Pagination.** One request returns at most 1,000 mentions. Compare the response\n   `total` with the UI count, not the number of rows you fetched — see *How to\n   effectively retrieve large sets of mentions*.\n4. **Collection delays.** A period you fetched an hour ago may contain more mentions\n   now — see *Polling for new mentions*.\n5. **Twitter restrictions.** Twitter mentions come without text, URL and author\n   details, which makes row-by-row comparison with UI exports misleading — see\n   *Data limitations*.\n6. **Deleted data.** Deleted topics, tags and binned mentions disappear from\n   responses, while copies you saved earlier keep them — see *Deleted data*.\n\nIf the numbers still differ after checking all of the above, capture the exact request\nURL, the time you sent it, and the raw response — and contact support with those\ndetails.\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "4b8bb0d1-89a4-41e3-ab3e-77dece490fb6",
+          "name": "List mentions",
+          "request": {
+            "name": "List mentions",
+            "description": {
+              "content": "Use this action to retrieve mentions matching criteria.\n\nThis endpoint is rate limited: no more than 10 requests per 10 seconds and no more than\n5 concurrent requests per user. Requests beyond those limits are rejected with a 429 status code.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "mentions"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "from",
+                  "value": "<string>",
+                  "description": "Filter mentions published on or after this date. Format - `yyyy-MM-ddThh:mm:ss`, with an optional UTC offset. Without an offset the value is interpreted in the `timeZone` parameter's zone, which defaults to the API key owner's time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "to",
+                  "value": "<string>",
+                  "description": "Filter mentions published till the `to` date, **inclusive**: the effective upper bound is `to` plus one day. `to=2018-06-08` includes the whole of June 8; `to=2018-06-08T04:20Z` includes mentions up to (but excluding) June 9, 04:20Z. Format and time zone interpretation are the same as for `from`. Default - today.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "addedFrom",
+                  "value": "<string>",
+                  "description": "Filter mentions that were added to the topic after this date. Format - `yyyy-MM-ddThh:mm:ss`. Unlike `published`, this is the moment YouScan saved the mention — useful for catching mentions collected with a delay. Note: unlike `to`, `addedTo` is not extended by a day.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "addedTo",
+                  "value": "<string>",
+                  "description": "Filter mentions that were added to the topic before this date. Format - `yyyy-MM-ddThh:mm:ss`."
+                },
+                {
+                  "disabled": false,
+                  "key": "sinceSeq",
+                  "value": "<long>",
+                  "description": "Cursor filter: return only mentions with `seq` greater than this value (exclusive). Combine with `orderBy=seqAsc` and pass the highest `seq` from the previous page — see *How to effectively retrieve large sets of mentions* for the full loop.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "sentiment",
+                  "value": "<string>",
+                  "description": "Filter mentions matching the specified sentiment. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "sentiment",
+                  "value": "<string>",
+                  "description": "Filter mentions matching the specified sentiment. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeSentiment",
+                  "value": "<string>",
+                  "description": "Exclude mentions matching the specified sentiment. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeSentiment",
+                  "value": "<string>",
+                  "description": "Exclude mentions matching the specified sentiment. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "engagementFrom",
+                  "value": "<integer>",
+                  "description": "Filter mentions with engagement count greater than or equal to this value."
+                },
+                {
+                  "disabled": false,
+                  "key": "engagementTo",
+                  "value": "<integer>",
+                  "description": "Filter mentions with engagement count less than or equal to this value."
+                },
+                {
+                  "disabled": false,
+                  "key": "engagementCollectedFrom",
+                  "value": "<string>",
+                  "description": "Filter mentions where engagement data was collected after this date. Format - `yyyy-MM-ddThh:mm:ss`."
+                },
+                {
+                  "disabled": false,
+                  "key": "engagementCollectedTo",
+                  "value": "<string>",
+                  "description": "Filter mentions where engagement data was collected before this date. Format - `yyyy-MM-ddThh:mm:ss`."
+                },
+                {
+                  "disabled": false,
+                  "key": "sources",
+                  "value": "<string>",
+                  "description": "Filter mentions by source. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "sources",
+                  "value": "<string>",
+                  "description": "Filter mentions by source. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeSources",
+                  "value": "<string>",
+                  "description": "Exclude mentions by source. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeSources",
+                  "value": "<string>",
+                  "description": "Exclude mentions by source. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "sourceTypes",
+                  "value": "<string>",
+                  "description": "Filter mentions by source type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "sourceTypes",
+                  "value": "<string>",
+                  "description": "Filter mentions by source type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeSourceTypes",
+                  "value": "<string>",
+                  "description": "Exclude mentions by source type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeSourceTypes",
+                  "value": "<string>",
+                  "description": "Exclude mentions by source type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "postTypes",
+                  "value": "<string>",
+                  "description": "Filter mentions by post type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "postTypes",
+                  "value": "<string>",
+                  "description": "Filter mentions by post type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludePostTypes",
+                  "value": "<string>",
+                  "description": "Exclude mentions by post type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludePostTypes",
+                  "value": "<string>",
+                  "description": "Exclude mentions by post type. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "tags",
+                  "value": "<string>",
+                  "description": "Filter mentions by tag names. Multiple values are supported. Returns a validation error if a tag with the given name does not exist in the topic.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "tags",
+                  "value": "<string>",
+                  "description": "Filter mentions by tag names. Multiple values are supported. Returns a validation error if a tag with the given name does not exist in the topic.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeTags",
+                  "value": "<string>",
+                  "description": "Exclude mentions by tag names. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeTags",
+                  "value": "<string>",
+                  "description": "Exclude mentions by tag names. Multiple values are supported."
+                },
+                {
+                  "disabled": false,
+                  "key": "autoCategories",
+                  "value": "<string>",
+                  "description": "Filter mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/). Multiple values are supported.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "autoCategories",
+                  "value": "<string>",
+                  "description": "Filter mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/). Multiple values are supported.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeAutoCategories",
+                  "value": "<string>",
+                  "description": "Exclude mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/). Multiple values are supported.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "excludeAutoCategories",
+                  "value": "<string>",
+                  "description": "Exclude mentions by [auto categories](https://youscan.io/2018/04/wom-autocategory/). Multiple values are supported.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "starred",
+                  "value": "<boolean>",
+                  "description": "Use `true` to get only starred mentions."
+                },
+                {
+                  "disabled": false,
+                  "key": "tagged",
+                  "value": "<boolean>",
+                  "description": "Use `true` to get mentions containing any tag. Use `false` to get mentions without any tags. Omit the parameter to get all mentions regardless of tags.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "processed",
+                  "value": "<boolean>",
+                  "description": "Use `true` to get processed mentions. Use `false` to get unprocessed mentions. Omit the parameter to get all mentions regardless of processed status.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "deleted",
+                  "value": "false",
+                  "description": "Use `true` to get mentions that were moved to Bin."
+                },
+                {
+                  "disabled": false,
+                  "key": "spam",
+                  "value": "false",
+                  "description": "Use `true` to get mentions that were marked as spam."
+                },
+                {
+                  "disabled": false,
+                  "key": "textQuery",
+                  "value": "<string>",
+                  "description": "Additionally filter mentions by a text query using YouScan query syntax."
+                },
+                {
+                  "disabled": false,
+                  "key": "dedup",
+                  "value": "false",
+                  "description": "Use `true` to group near-duplicate mentions by text and return only one mention per group."
+                },
+                {
+                  "disabled": false,
+                  "key": "htmlSanitize",
+                  "value": "true",
+                  "description": "Whether to sanitize mention text to be consumed as HTML. Use `false` to get raw unescaped text.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "timeZone",
+                  "value": "<string>",
+                  "description": "IANA time zone identifier (e.g. `Europe/Kyiv`) used to interpret date parameters that have no explicit offset. Defaults to the API key owner's time zone. To reproduce the numbers a platform user sees in the UI, pass that user's time zone here.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "size",
+                  "value": "10",
+                  "description": "Limits the number of mentions per page. Default - 10, maximum - 1000. The response `total` field tells how many mentions match in total — if it exceeds `size`, paginate with the `sinceSeq` cursor.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "skip",
+                  "value": "<integer>",
+                  "description": "Number of mentions to skip. Used for paging; must be less than 10000. To page deeper than that, use the `sinceSeq` cursor instead.\n"
+                },
+                {
+                  "disabled": false,
+                  "key": "orderBy",
+                  "value": "published",
+                  "description": "Sorting field."
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "6df367ea-9410-4b13-b7a2-461be9d5ea81",
+              "name": "Mentions matching criteria.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "2018-06-01T03:30Z"
+                    },
+                    {
+                      "key": "to",
+                      "value": "2018-06-08T04:20Z"
+                    },
+                    {
+                      "key": "addedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "addedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sinceSeq",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementFrom",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementTo",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementCollectedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementCollectedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "youscan.io"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "telegram.me"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "starred",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "tagged",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "processed",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "deleted",
+                      "value": "false"
+                    },
+                    {
+                      "key": "spam",
+                      "value": "false"
+                    },
+                    {
+                      "key": "textQuery",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dedup",
+                      "value": "false"
+                    },
+                    {
+                      "key": "htmlSanitize",
+                      "value": "true"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "skip",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "orderBy",
+                      "value": "published"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"lastSeq\": 298761,\n  \"total\": 3785,\n  \"mentions\": [\n    {\n      \"id\": \"241032672\",\n      \"seq\": 3571010,\n      \"published\": \"2019-11-06T02:13:03+00:00\",\n      \"addedAt\": \"2019-11-06T14:04:59.9506137Z\",\n      \"url\": \"https://youscan.io/blog/saas-advisor\",\n      \"title\": \"Saas Advisor Named YouScan a Visual Analysis Category Winner in Martech-Challenges\",\n      \"text\": \"YouScan's recognition as a Visual Analysis winner is a result of our hard work on the system's Visual Insights functionality.\",\n      \"fullText\": \"YouScan's recognition as a Visual Analysis winner is a result of our hard work on the system's Visual Insights functionality.\",\n      \"imageUrl\": \"https://api-site.youscan.io/assets/visual-analysis.png\",\n      \"source\": \"youscan.io\",\n      \"author\": {\n        \"profileId\": \"1139551113605238784\",\n        \"name\": \"Zhanna Isaieva\",\n        \"nickname\": \"ZhannaIsaieva\",\n        \"avatarUrl\": \"https://api-site.youscan.io/assets/youscan-team-photos/youscan-zhanna-isaeva.png\",\n        \"url\": \"https://youscan.io/blog/saas-advisor\",\n        \"gender\": \"female\"\n      },\n      \"publicationPlace\": {\n        \"name\": \"YouScan Blog\",\n        \"nickname\": \"youscan_blog\",\n        \"url\": \"https://youscan.io/blog\"\n      },\n      \"sentiment\": \"positive\",\n      \"sourceType\": \"blog\",\n      \"language\": \"eng\",\n      \"imageActivities\": [\n        \"auto racing\"\n      ],\n      \"imageBrands\": [\n        \"youscan\"\n      ],\n      \"imageColors\": [\n        \"#eeeeee\"\n      ],\n      \"imageObjects\": [\n        \"computer\"\n      ],\n      \"imagePeople\": [\n        \"television presenter\"\n      ],\n      \"imageScenes\": [\n        \"scene\"\n      ],\n      \"imageTexts\": [\n        \"SALE 50% OFF\"\n      ],\n      \"postType\": \"post\",\n      \"contentTypes\": [\n        \"text\",\n        \"image\"\n      ],\n      \"tags\": [\n        \"awards\",\n        \"recognition\"\n      ],\n      \"rating\": null,\n      \"autoCategories\": [\n        \"wom\"\n      ],\n      \"subjects\": [\n        \"technology\",\n        \"marketing\"\n      ],\n      \"starred\": false,\n      \"processed\": false,\n      \"engagement\": {\n        \"likes\": 15,\n        \"comments\": 3,\n        \"reposts\": 2,\n        \"engagement\": 20\n      },\n      \"postId\": \"blog-post-123\",\n      \"parentPostId\": null,\n      \"discussionId\": \"blog-post-123\",\n      \"country\": \"ua\",\n      \"region\": \"Kyiv\",\n      \"city\": \"Kyiv\",\n      \"note\": \"Great recognition for our team\",\n      \"aspects\": [\n        \"quality_positive\"\n      ],\n      \"sentimentAspects\": [\n        {\n          \"aspect\": \"quality\",\n          \"sentiment\": \"positive\"\n        }\n      ],\n      \"potentialReach\": 100,\n      \"authorJobs\": [\n        \"marketing\"\n      ],\n      \"authorInterests\": [\n        \"technology\"\n      ],\n      \"authorInterestCategories\": [\n        \"tech\"\n      ],\n      \"customTags\": [\n        \"company_news\"\n      ],\n      \"categories\": [\n        {\n          \"id\": 1,\n          \"name\": \"Brands\",\n          \"subCategories\": [\n            {\n              \"id\": 11,\n              \"name\": \"YouScan\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "300c296a-14b6-4212-b1a8-abe28627e64a",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "2018-06-01T03:30Z"
+                    },
+                    {
+                      "key": "to",
+                      "value": "2018-06-08T04:20Z"
+                    },
+                    {
+                      "key": "addedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "addedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sinceSeq",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementFrom",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementTo",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementCollectedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementCollectedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "youscan.io"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "telegram.me"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "starred",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "tagged",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "processed",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "deleted",
+                      "value": "false"
+                    },
+                    {
+                      "key": "spam",
+                      "value": "false"
+                    },
+                    {
+                      "key": "textQuery",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dedup",
+                      "value": "false"
+                    },
+                    {
+                      "key": "htmlSanitize",
+                      "value": "true"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "skip",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "orderBy",
+                      "value": "published"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ee44e4b4-1033-4f49-b708-5cafdcbcf025",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "2018-06-01T03:30Z"
+                    },
+                    {
+                      "key": "to",
+                      "value": "2018-06-08T04:20Z"
+                    },
+                    {
+                      "key": "addedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "addedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sinceSeq",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementFrom",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementTo",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementCollectedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementCollectedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "youscan.io"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "telegram.me"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "starred",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "tagged",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "processed",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "deleted",
+                      "value": "false"
+                    },
+                    {
+                      "key": "spam",
+                      "value": "false"
+                    },
+                    {
+                      "key": "textQuery",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dedup",
+                      "value": "false"
+                    },
+                    {
+                      "key": "htmlSanitize",
+                      "value": "true"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "skip",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "orderBy",
+                      "value": "published"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "aae8fa71-2f61-4256-bb35-3869053b5c5c",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "2018-06-01T03:30Z"
+                    },
+                    {
+                      "key": "to",
+                      "value": "2018-06-08T04:20Z"
+                    },
+                    {
+                      "key": "addedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "addedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sinceSeq",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementFrom",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementTo",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementCollectedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementCollectedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "youscan.io"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "telegram.me"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "starred",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "tagged",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "processed",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "deleted",
+                      "value": "false"
+                    },
+                    {
+                      "key": "spam",
+                      "value": "false"
+                    },
+                    {
+                      "key": "textQuery",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dedup",
+                      "value": "false"
+                    },
+                    {
+                      "key": "htmlSanitize",
+                      "value": "true"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "skip",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "orderBy",
+                      "value": "published"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "08d4d72b-90ba-46ff-aed6-a73ee2f4106c",
+              "name": "Rate limit exceeded (10 requests per 10 seconds, 5 concurrent requests).",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "2018-06-01T03:30Z"
+                    },
+                    {
+                      "key": "to",
+                      "value": "2018-06-08T04:20Z"
+                    },
+                    {
+                      "key": "addedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "addedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sinceSeq",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSentiment",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementFrom",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementTo",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "engagementCollectedFrom",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "engagementCollectedTo",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "youscan.io"
+                    },
+                    {
+                      "key": "sources",
+                      "value": "telegram.me"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeSources",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "sourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "excludeSourceTypes",
+                      "value": "messenger"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "postTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "post"
+                    },
+                    {
+                      "key": "excludePostTypes",
+                      "value": "comment"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "tags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeTags",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "autoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "excludeAutoCategories",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "starred",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "tagged",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "processed",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "deleted",
+                      "value": "false"
+                    },
+                    {
+                      "key": "spam",
+                      "value": "false"
+                    },
+                    {
+                      "key": "textQuery",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dedup",
+                      "value": "false"
+                    },
+                    {
+                      "key": "htmlSanitize",
+                      "value": "true"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "skip",
+                      "value": "<integer>"
+                    },
+                    {
+                      "key": "orderBy",
+                      "value": "published"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "text/plain"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "Please enhance your calm",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "74804f7e-229f-4660-8fe1-efd37c570200",
+          "name": "Get mentions by IDs",
+          "request": {
+            "name": "Get mentions by IDs",
+            "description": {
+              "content": "Retrieve specific mentions by their IDs. Maximum 500 IDs per request.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "get-mentions"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "ids",
+                  "value": "<long>",
+                  "description": "(Required) Mention IDs. Multiple values are supported. Maximum 500 IDs per request."
+                },
+                {
+                  "disabled": false,
+                  "key": "ids",
+                  "value": "<long>",
+                  "description": "(Required) Mention IDs. Multiple values are supported. Maximum 500 IDs per request."
+                },
+                {
+                  "disabled": false,
+                  "key": "timeZone",
+                  "value": "<string>",
+                  "description": "IANA time zone identifier used to convert mention dates in the response. Defaults to the API key owner's time zone."
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "f277daad-60a6-4f78-8647-e5b23d36cb48",
+              "name": "Requested mentions.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"mentions\": [\n    {\n      \"id\": \"string\",\n      \"seq\": 8471,\n      \"published\": \"1978-01-20T13:24:24.469Z\",\n      \"addedAt\": \"2016-10-10T07:26:50.759Z\",\n      \"url\": \"string\",\n      \"title\": \"string\",\n      \"text\": \"string\",\n      \"fullText\": \"string\",\n      \"imageUrl\": \"string\",\n      \"images\": [\n        \"string\",\n        \"string\"\n      ],\n      \"source\": \"string\",\n      \"author\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 4528,\n        \"gender\": \"unknown\",\n        \"age\": 2560,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"publicationPlace\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 6589,\n        \"gender\": \"unknown\",\n        \"age\": 1116,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"sentiment\": \"positive\",\n      \"sourceType\": \"forum\",\n      \"resourceType\": \"string\",\n      \"language\": \"string\",\n      \"imageActivities\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageBrands\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageColors\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageObjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imagePeople\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageScenes\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageTexts\": [\n        \"string\",\n        \"string\"\n      ],\n      \"postType\": \"extendedRepost\",\n      \"contentTypes\": [\n        \"subtitles\",\n        \"subtitles\"\n      ],\n      \"sourceFormat\": \"instagramStories\",\n      \"tags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"rating\": 3.5533801870713457,\n      \"autoCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"subjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"starred\": true,\n      \"processed\": true,\n      \"engagement\": {\n        \"likes\": 2242,\n        \"dislikes\": 9582,\n        \"comments\": 4679,\n        \"reposts\": 5176,\n        \"views\": 6602,\n        \"reach\": 2061,\n        \"saves\": 8812,\n        \"impressions\": 3507,\n        \"engagement\": 4182,\n        \"reactions\": {\n          \"total\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"angry\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"haha\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"love\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"sad\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"wow\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"care\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        \"dateCollected\": \"2012-01-22T17:55:06.453Z\"\n      },\n      \"postId\": \"string\",\n      \"parentPostId\": \"string\",\n      \"discussionId\": \"string\",\n      \"country\": \"string\",\n      \"region\": \"string\",\n      \"city\": \"string\",\n      \"note\": \"string\",\n      \"aspects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"sentimentAspects\": [\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"undefined\"\n        },\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"neutral\"\n        }\n      ],\n      \"potentialReach\": 3927,\n      \"authorJobs\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterests\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterestCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"customTags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"categories\": [\n        {\n          \"id\": 1706,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        },\n        {\n          \"id\": 1694,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"id\": \"string\",\n      \"seq\": 2535,\n      \"published\": \"1979-10-15T08:01:37.997Z\",\n      \"addedAt\": \"1958-11-27T20:09:00.915Z\",\n      \"url\": \"string\",\n      \"title\": \"string\",\n      \"text\": \"string\",\n      \"fullText\": \"string\",\n      \"imageUrl\": \"string\",\n      \"images\": [\n        \"string\",\n        \"string\"\n      ],\n      \"source\": \"string\",\n      \"author\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 3044,\n        \"gender\": \"unknown\",\n        \"age\": 3597,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"publicationPlace\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 8030,\n        \"gender\": \"community\",\n        \"age\": 6505,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"sentiment\": \"positive\",\n      \"sourceType\": \"forum\",\n      \"resourceType\": \"string\",\n      \"language\": \"string\",\n      \"imageActivities\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageBrands\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageColors\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageObjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imagePeople\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageScenes\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageTexts\": [\n        \"string\",\n        \"string\"\n      ],\n      \"postType\": \"comment\",\n      \"contentTypes\": [\n        \"link\",\n        \"video\"\n      ],\n      \"sourceFormat\": \"twitchLive\",\n      \"tags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"rating\": 4.045933548401663,\n      \"autoCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"subjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"starred\": false,\n      \"processed\": false,\n      \"engagement\": {\n        \"likes\": 4315,\n        \"dislikes\": 2353,\n        \"comments\": 2285,\n        \"reposts\": 7994,\n        \"views\": 7439,\n        \"reach\": 9129,\n        \"saves\": 337,\n        \"impressions\": 3876,\n        \"engagement\": 7875,\n        \"reactions\": {\n          \"total\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"angry\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"haha\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"love\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"sad\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"wow\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"care\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        \"dateCollected\": \"1948-03-25T10:35:18.807Z\"\n      },\n      \"postId\": \"string\",\n      \"parentPostId\": \"string\",\n      \"discussionId\": \"string\",\n      \"country\": \"string\",\n      \"region\": \"string\",\n      \"city\": \"string\",\n      \"note\": \"string\",\n      \"aspects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"sentimentAspects\": [\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"negative\"\n        },\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"negative\"\n        }\n      ],\n      \"potentialReach\": 7121,\n      \"authorJobs\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterests\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterestCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"customTags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"categories\": [\n        {\n          \"id\": 8160,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        },\n        {\n          \"id\": 6469,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "18197cdd-74fc-44f5-96eb-0e7161ef0101",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a0d403cc-0c0e-4951-86bd-14ccc9837575",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "4568ba1b-cac1-4294-803e-2bbf0224d5d0",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "ids",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "timeZone",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "3b9d67cd-5350-4cfa-8d5f-481f6fbbfe95",
+          "name": "Get mentions by IDs (POST)",
+          "request": {
+            "name": "Get mentions by IDs (POST)",
+            "description": {
+              "content": "Same as the GET variant, but accepts the IDs in the request body — useful when the list of IDs is too long for a URL. Maximum 500 IDs per request.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "get-mentions"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\n    \"<long>\",\n    \"<long>\"\n  ],\n  \"timeZone\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "656d471e-4033-49d2-937b-e48c2939eda4",
+              "name": "Requested mentions.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    241032672,\n    241032673\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"mentions\": [\n    {\n      \"id\": \"string\",\n      \"seq\": 8471,\n      \"published\": \"1978-01-20T13:24:24.469Z\",\n      \"addedAt\": \"2016-10-10T07:26:50.759Z\",\n      \"url\": \"string\",\n      \"title\": \"string\",\n      \"text\": \"string\",\n      \"fullText\": \"string\",\n      \"imageUrl\": \"string\",\n      \"images\": [\n        \"string\",\n        \"string\"\n      ],\n      \"source\": \"string\",\n      \"author\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 4528,\n        \"gender\": \"unknown\",\n        \"age\": 2560,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"publicationPlace\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 6589,\n        \"gender\": \"unknown\",\n        \"age\": 1116,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"sentiment\": \"positive\",\n      \"sourceType\": \"forum\",\n      \"resourceType\": \"string\",\n      \"language\": \"string\",\n      \"imageActivities\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageBrands\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageColors\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageObjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imagePeople\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageScenes\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageTexts\": [\n        \"string\",\n        \"string\"\n      ],\n      \"postType\": \"extendedRepost\",\n      \"contentTypes\": [\n        \"subtitles\",\n        \"subtitles\"\n      ],\n      \"sourceFormat\": \"instagramStories\",\n      \"tags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"rating\": 3.5533801870713457,\n      \"autoCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"subjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"starred\": true,\n      \"processed\": true,\n      \"engagement\": {\n        \"likes\": 2242,\n        \"dislikes\": 9582,\n        \"comments\": 4679,\n        \"reposts\": 5176,\n        \"views\": 6602,\n        \"reach\": 2061,\n        \"saves\": 8812,\n        \"impressions\": 3507,\n        \"engagement\": 4182,\n        \"reactions\": {\n          \"total\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"angry\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"haha\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"love\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"sad\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"wow\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"care\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        \"dateCollected\": \"2012-01-22T17:55:06.453Z\"\n      },\n      \"postId\": \"string\",\n      \"parentPostId\": \"string\",\n      \"discussionId\": \"string\",\n      \"country\": \"string\",\n      \"region\": \"string\",\n      \"city\": \"string\",\n      \"note\": \"string\",\n      \"aspects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"sentimentAspects\": [\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"undefined\"\n        },\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"neutral\"\n        }\n      ],\n      \"potentialReach\": 3927,\n      \"authorJobs\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterests\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterestCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"customTags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"categories\": [\n        {\n          \"id\": 1706,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        },\n        {\n          \"id\": 1694,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"id\": \"string\",\n      \"seq\": 2535,\n      \"published\": \"1979-10-15T08:01:37.997Z\",\n      \"addedAt\": \"1958-11-27T20:09:00.915Z\",\n      \"url\": \"string\",\n      \"title\": \"string\",\n      \"text\": \"string\",\n      \"fullText\": \"string\",\n      \"imageUrl\": \"string\",\n      \"images\": [\n        \"string\",\n        \"string\"\n      ],\n      \"source\": \"string\",\n      \"author\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 3044,\n        \"gender\": \"unknown\",\n        \"age\": 3597,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"publicationPlace\": {\n        \"profileId\": \"string\",\n        \"url\": \"string\",\n        \"name\": \"string\",\n        \"nickname\": \"string\",\n        \"bio\": \"string\",\n        \"avatarUrl\": \"string\",\n        \"subscribers\": 8030,\n        \"gender\": \"community\",\n        \"age\": 6505,\n        \"jobs\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interests\": [\n          \"string\",\n          \"string\"\n        ],\n        \"interestCategories\": [\n          \"string\",\n          \"string\"\n        ]\n      },\n      \"sentiment\": \"positive\",\n      \"sourceType\": \"forum\",\n      \"resourceType\": \"string\",\n      \"language\": \"string\",\n      \"imageActivities\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageBrands\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageColors\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageObjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imagePeople\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageScenes\": [\n        \"string\",\n        \"string\"\n      ],\n      \"imageTexts\": [\n        \"string\",\n        \"string\"\n      ],\n      \"postType\": \"comment\",\n      \"contentTypes\": [\n        \"link\",\n        \"video\"\n      ],\n      \"sourceFormat\": \"twitchLive\",\n      \"tags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"rating\": 4.045933548401663,\n      \"autoCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"subjects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"starred\": false,\n      \"processed\": false,\n      \"engagement\": {\n        \"likes\": 4315,\n        \"dislikes\": 2353,\n        \"comments\": 2285,\n        \"reposts\": 7994,\n        \"views\": 7439,\n        \"reach\": 9129,\n        \"saves\": 337,\n        \"impressions\": 3876,\n        \"engagement\": 7875,\n        \"reactions\": {\n          \"total\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"angry\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"haha\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"love\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"sad\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"wow\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"care\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        \"dateCollected\": \"1948-03-25T10:35:18.807Z\"\n      },\n      \"postId\": \"string\",\n      \"parentPostId\": \"string\",\n      \"discussionId\": \"string\",\n      \"country\": \"string\",\n      \"region\": \"string\",\n      \"city\": \"string\",\n      \"note\": \"string\",\n      \"aspects\": [\n        \"string\",\n        \"string\"\n      ],\n      \"sentimentAspects\": [\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"negative\"\n        },\n        {\n          \"aspect\": \"string\",\n          \"sentiment\": \"negative\"\n        }\n      ],\n      \"potentialReach\": 7121,\n      \"authorJobs\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterests\": [\n        \"string\",\n        \"string\"\n      ],\n      \"authorInterestCategories\": [\n        \"string\",\n        \"string\"\n      ],\n      \"customTags\": [\n        \"string\",\n        \"string\"\n      ],\n      \"categories\": [\n        {\n          \"id\": 8160,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        },\n        {\n          \"id\": 6469,\n          \"name\": \"string\",\n          \"subCategories\": [\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            },\n            {\n              \"id\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              },\n              \"name\": {\n                \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n              }\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "6aa23fa6-9d6a-4a09-b3b1-d3611c90649c",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    241032672,\n    241032673\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3514e4f3-bcf0-4dc5-98c5-aca5d5b1daca",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    241032672,\n    241032673\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "f7add577-4e19-412f-88b7-b75dde89370a",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "get-mentions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    241032672,\n    241032673\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "d0c66238-a9af-4d48-9afe-75a72603413f",
+          "name": "Bulk update mentions",
+          "request": {
+            "name": "Bulk update mentions",
+            "description": {
+              "content": "Update mentions' `tags` and `sentiment`, mark them as spam, or remove them. Maximum 100 mentions per request.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "mentions",
+                "bulkupdate"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mentions\": [\n    {\n      \"id\": \"<long>\",\n      \"tags\": [\n        \"<string>\",\n        \"<string>\"\n      ],\n      \"sentiment\": \"<string>\",\n      \"spam\": \"<boolean>\",\n      \"deleted\": \"<boolean>\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "af3aa84d-44b0-4a36-8528-88fca6790fdb",
+              "name": "Mentions updated.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions",
+                    "bulkupdate"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mentions\": [\n    {\n      \"id\": 1,\n      \"tags\": [\n        \"tag1\",\n        \"tag2\"\n      ],\n      \"sentiment\": \"neutral\",\n      \"spam\": false,\n      \"deleted\": false\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "1348e9a2-6816-43ac-807f-26bf74c17848",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions",
+                    "bulkupdate"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mentions\": [\n    {\n      \"id\": 1,\n      \"tags\": [\n        \"tag1\",\n        \"tag2\"\n      ],\n      \"sentiment\": \"neutral\",\n      \"spam\": false,\n      \"deleted\": false\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3bd090aa-2eaa-4e20-b150-9998dd83ae17",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions",
+                    "bulkupdate"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mentions\": [\n    {\n      \"id\": 1,\n      \"tags\": [\n        \"tag1\",\n        \"tag2\"\n      ],\n      \"sentiment\": \"neutral\",\n      \"spam\": false,\n      \"deleted\": false\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "83f5a6e3-f2ea-4590-8b31-291596597678",
+              "name": "Your permission level for this topic is too low for the action.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions",
+                    "bulkupdate"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mentions\": [\n    {\n      \"id\": 1,\n      \"tags\": [\n        \"tag1\",\n        \"tag2\"\n      ],\n      \"sentiment\": \"neutral\",\n      \"spam\": false,\n      \"deleted\": false\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"THEME_PERMISSION_DENIED\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ac38e3b0-b48b-4215-8296-a7bbdf314961",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "mentions",
+                    "bulkupdate"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mentions\": [\n    {\n      \"id\": 1,\n      \"tags\": [\n        \"tag1\",\n        \"tag2\"\n      ],\n      \"sentiment\": \"neutral\",\n      \"spam\": false,\n      \"deleted\": false\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.youscan.io/api/external",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-KEY"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "1f398869-1cf5-4f27-a7c2-820c53a0990e",
+    "name": "YouScan Data Import Mentions API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n\n\nContact Support:\n Name: YouScan Support",
+      "type": "text/plain"
+    }
+  }
+}

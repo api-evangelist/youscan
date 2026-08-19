@@ -1,0 +1,193 @@
+{
+  "item": [
+    {
+      "id": "302128ea-5398-4e96-9611-718abecb663c",
+      "name": "Webhook",
+      "description": {
+        "content": "Webhooks push new mentions to your own server in real time, so you don't have to poll the\nAPI. Every time a new mention is found and saved to a topic, YouScan sends an HTTP `POST`\nwith the mention payload to a URL you control.\n\n### Setup\n\nWebhooks are configured in the YouScan UI — there is **no API to create them**. Open a\ntopic's **Settings → Integrations**, click **Add** next to *Webhook*, and enter your\ndestination URL. Full guide:\n[How to use webhook integration](https://help.youscan.io/en/articles/3371690-how-to-use-webhook-integration).\n\n- Set up **per topic** — point several topics at the same URL, or add several webhooks to one topic.\n- Mentions are sent **automatically** via rule-based alerts, and can also be sent **manually** from the mention stream.\n- For a protected endpoint, put Basic Auth credentials in the URL: `https://user:password@example.com/callback`.\n\n### Your endpoint\n\nRespond with any `2xx` status code within **4 minutes** to acknowledge receipt; any other\nresponse — or a timeout — is treated as a failed delivery. Fields with `null` values are\nomitted from the payload.\n\n> Mentions from Reddit, Quora and some smaller sources are not delivered. Twitter mentions\n> are restricted — text, URL and author details are removed.\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "e30cbb54-75bd-4757-8fb0-fe51e7fd0665",
+          "name": "Mention found",
+          "request": {
+            "name": "Mention found",
+            "description": {
+              "content": "Sent by YouScan to the URL you configured, every time a new mention is found and\nsaved to the topic. Fields with `null` values are omitted from the payload.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "protocol": "https",
+              "path": [
+                "your-webhook-endpoint"
+              ],
+              "host": [
+                "your-app",
+                "example"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topicId\": \"<integer>\",\n  \"mentionId\": \"<long>\",\n  \"published\": \"<dateTime>\",\n  \"postType\": \"<string>\",\n  \"resourceType\": \"<string>\",\n  \"topicName\": \"<string>\",\n  \"themeId\": \"<integer>\",\n  \"themeName\": \"<string>\",\n  \"sourceName\": \"<string>\",\n  \"author\": {\n    \"url\": \"<string>\",\n    \"name\": \"<string>\",\n    \"nickname\": \"<string>\",\n    \"profileId\": \"<string>\",\n    \"profileType\": \"<string>\",\n    \"avatarUrl\": \"<string>\",\n    \"subscribers\": \"<integer>\",\n    \"age\": \"<integer>\"\n  },\n  \"channel\": {\n    \"url\": \"<string>\",\n    \"name\": \"<string>\",\n    \"nickname\": \"<string>\",\n    \"profileId\": \"<string>\",\n    \"profileType\": \"<string>\",\n    \"avatarUrl\": \"<string>\",\n    \"subscribers\": \"<integer>\",\n    \"age\": \"<integer>\"\n  },\n  \"title\": \"<string>\",\n  \"text\": \"<string>\",\n  \"url\": \"<string>\",\n  \"addedAt\": \"<dateTime>\",\n  \"sentiment\": \"<string>\",\n  \"imageUrl\": \"<string>\",\n  \"language\": \"<string>\",\n  \"spam\": \"<boolean>\",\n  \"rating\": \"<number>\",\n  \"tags\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"postId\": \"<string>\",\n  \"parentPostId\": \"<string>\",\n  \"discussionId\": \"<string>\",\n  \"likes\": \"<integer>\",\n  \"reposts\": \"<integer>\",\n  \"comments\": \"<integer>\",\n  \"engagement\": \"<integer>\",\n  \"dislikes\": \"<integer>\",\n  \"views\": \"<integer>\",\n  \"impressions\": \"<integer>\",\n  \"reach\": \"<integer>\",\n  \"saves\": \"<integer>\",\n  \"reactions\": {\n    \"total\": \"<integer>\",\n    \"angry\": \"<integer,null>\",\n    \"haha\": \"<integer,null>\",\n    \"love\": \"<integer,null>\",\n    \"sad\": \"<integer,null>\",\n    \"wow\": \"<integer,null>\",\n    \"care\": \"<integer,null>\"\n  },\n  \"contentTypes\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"sourceFormat\": \"<string>\",\n  \"country\": \"<string>\",\n  \"region\": \"<string>\",\n  \"city\": \"<string>\",\n  \"potentialReach\": \"<integer>\",\n  \"imageScenes\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"imageObjects\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"imageColors\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"imageActivities\": [\n    \"<string>\",\n    \"<string>\"\n  ],\n  \"imageBrands\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "72d03a04-4cdd-44cf-8a0e-3a8217f9c346",
+              "name": "Return any 2xx status code to acknowledge receipt of the mention.",
+              "originalRequest": {
+                "url": {
+                  "protocol": "https",
+                  "path": [
+                    "your-webhook-endpoint"
+                  ],
+                  "host": [
+                    "your-app",
+                    "example"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicId\": 1,\n  \"topicName\": \"YouScan\",\n  \"themeId\": 1,\n  \"themeName\": \"YouScan\",\n  \"mentionId\": 241032672,\n  \"url\": \"https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/\",\n  \"published\": \"2021-08-09T14:13:03Z\",\n  \"addedAt\": \"2021-08-09T16:04:59.9506137Z\",\n  \"sourceName\": \"youscan.io\",\n  \"title\": \"Saas Advisor Named <b>YouScan</b> a Visual Analysis Category Winner in Martech-Challenges\",\n  \"text\": \"The second year in a row, <b>YouScan</b> is named the Best Social Media Monitoring Software in the 2021 MarTech Breakthrough Awards.\",\n  \"imageUrl\": \"https://api-site.youscan.io/assets/visual-analysis.png\",\n  \"author\": {\n    \"name\": \"Elena Teselko\",\n    \"url\": \"https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/\",\n    \"avatarUrl\": \"https://assets.youscan.io/assets/main/0625ed74b3a8-512.jpeg\"\n  },\n  \"sentiment\": \"positive\",\n  \"postType\": \"post\",\n  \"resourceType\": \"blog\",\n  \"spam\": false,\n  \"language\": \"eng\",\n  \"country\": \"ua\",\n  \"region\": \"Kyiv\",\n  \"city\": \"Kyiv\",\n  \"tags\": [\n    \"Awards\"\n  ],\n  \"contentTypes\": [\n    \"text\",\n    \"image\"\n  ],\n  \"likes\": 12,\n  \"comments\": 3,\n  \"engagement\": 15,\n  \"potentialReach\": 100,\n  \"postId\": \"blog-post-123\",\n  \"discussionId\": \"blog-post-123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "8d33d414-9a59-463e-ba8c-699a55ce043f",
+              "name": "YouScan treats any non-2xx response — or no response within 4 minutes — as a\nfailed delivery.\n",
+              "originalRequest": {
+                "url": {
+                  "protocol": "https",
+                  "path": [
+                    "your-webhook-endpoint"
+                  ],
+                  "host": [
+                    "your-app",
+                    "example"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicId\": 1,\n  \"topicName\": \"YouScan\",\n  \"themeId\": 1,\n  \"themeName\": \"YouScan\",\n  \"mentionId\": 241032672,\n  \"url\": \"https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/\",\n  \"published\": \"2021-08-09T14:13:03Z\",\n  \"addedAt\": \"2021-08-09T16:04:59.9506137Z\",\n  \"sourceName\": \"youscan.io\",\n  \"title\": \"Saas Advisor Named <b>YouScan</b> a Visual Analysis Category Winner in Martech-Challenges\",\n  \"text\": \"The second year in a row, <b>YouScan</b> is named the Best Social Media Monitoring Software in the 2021 MarTech Breakthrough Awards.\",\n  \"imageUrl\": \"https://api-site.youscan.io/assets/visual-analysis.png\",\n  \"author\": {\n    \"name\": \"Elena Teselko\",\n    \"url\": \"https://youscan.io/blog/youscan-named-the-best-social-media-monitoring-software/\",\n    \"avatarUrl\": \"https://assets.youscan.io/assets/main/0625ed74b3a8-512.jpeg\"\n  },\n  \"sentiment\": \"positive\",\n  \"postType\": \"post\",\n  \"resourceType\": \"blog\",\n  \"spam\": false,\n  \"language\": \"eng\",\n  \"country\": \"ua\",\n  \"region\": \"Kyiv\",\n  \"city\": \"Kyiv\",\n  \"tags\": [\n    \"Awards\"\n  ],\n  \"contentTypes\": [\n    \"text\",\n    \"image\"\n  ],\n  \"likes\": 12,\n  \"comments\": 3,\n  \"engagement\": 15,\n  \"potentialReach\": 100,\n  \"postId\": \"blog-post-123\",\n  \"discussionId\": \"blog-post-123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.youscan.io/api/external",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-KEY"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "06753e44-fad7-4ae7-9a5e-a181d9c2f8fc",
+    "name": "YouScan Data Import Webhook API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n\n\nContact Support:\n Name: YouScan Support",
+      "type": "text/plain"
+    }
+  }
+}

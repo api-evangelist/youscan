@@ -1,0 +1,1347 @@
+{
+  "item": [
+    {
+      "id": "bdb1028c-76e7-476a-a6c3-8205c65425c6",
+      "name": "Topics",
+      "description": {
+        "content": "Create and manage topics — the monitoring entities that collect mentions matching your queries.\n\n### Topic query structure\n\nA topic query consists of a `textQuery` and/or `viQuery` (at least one is required) plus an optional `filter`.\n\nFor all topic query filters, the following field names are supported:\n\n- `country`: ISO2 country code (e.g. `country=US`, `country=UA`)\n- `countryGroup`: Europe, Asia, NorthAmerica, CentralAmerica, TheCaribbean, SouthAmerica, Africa, Oceania (e.g. `countryGroup=Europe`)\n- `language`: ISO639-2 language code (e.g. `language=ENG`, `language=UKR`)\n- `source`: domain format (e.g. `source=instagram.com`)\n- `sourceType`: social, messenger, reviews, news, blog, forum (e.g. `sourceType=social`)\n- `postType`: post, repost, extendedRepost, comment (e.g. `postType=post`)\n- `contentType`: text, link, image, video, poll, subtitles, sticker (e.g. `contentType=image`)\n- `authorAge`: numeric value (e.g. `authorAge=18`)\n- `authorSubscribers`: numeric value (e.g. `authorSubscribers=1000`)\n- `gender`: `male` or `female` (e.g. `gender=male`)\n\nSupported Visual Insights (VI) query values (used inside `viQuery`):\n\n- `logo`: detect specific brand logos (e.g. `logo:\"nike\"`)\n- `image.object`: find specific objects (e.g. `image.object:\"car\"`)\n- `image.activity`: find activities (e.g. `image.activity:\"cooking\"`)\n- `image.person`: find people types (e.g. `image.person:\"athlete\"`)\n- `image.scene`: find settings (e.g. `image.scene:\"beach\"`)\n- `image.type`: filter by image type (e.g. `image.type:\"PHOTO\"`)\n- `image.subtype`: filter by image subtype (e.g. `image.subtype:\"selfie\"`)\n- `text`: search mention text (e.g. `text:\"sale\"`)\n\nSupported operations for each filter:\n\n- `oneOf`: field value must match one of the specified values. Applicable to most fields.\n- `notOneOf`: field value must not match any of the specified values. Applicable to most fields.\n- `greaterOrEqual`: field value must be greater than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).\n- `lessOrEqual`: field value must be less than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).\n\nEach filter object must specify:\n- `fieldName`: The field to filter on (see the list above)\n- `op`: The operation to perform (see the list above)\n- `value`: JSON-encoded array of values (e.g. `[\"ua\"]`)\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "4b542b2a-ded3-4769-8d80-fb1ed6ee59f6",
+          "name": "List topics",
+          "request": {
+            "name": "List topics",
+            "description": {
+              "content": "List all topics available in your account.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "8125459c-9e52-4bbe-9456-4f31e6014307",
+              "name": "Topics available in the account.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"topics\": [\n    {\n      \"id\": 41541,\n      \"name\": \"Coca-cola\"\n    },\n    {\n      \"id\": 41546,\n      \"name\": \"Pepsi Cola\"\n    },\n    {\n      \"id\": 41550,\n      \"name\": \"Fanta\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "df5aa804-07f2-4137-8f73-7936e9e11808",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "2905f769-40a1-4c4a-b6fd-f7758730f666",
+          "name": "Create topic",
+          "request": {
+            "name": "Create topic",
+            "description": {
+              "content": "Creates a new topic for mention monitoring.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<string>\",\n  \"topicQuery\": {\n    \"textQuery\": \"<string,null>\",\n    \"viQuery\": \"<string,null>\",\n    \"filter\": {\n      \"op\": \"<string>\",\n      \"filters\": [\n        {\n          \"fieldName\": \"<string>\",\n          \"op\": \"<string>\",\n          \"value\": \"<string>\"\n        },\n        {\n          \"fieldName\": \"<string>\",\n          \"op\": \"<string>\",\n          \"value\": \"<string>\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "3e0e3122-c0ef-4f3e-97c2-2febc20261cc",
+              "name": "Topic created.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Topic Name\",\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "URL of the created topic.",
+                  "key": "Location",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": 123,\n  \"name\": \"Topic Name\",\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\"\n  },\n  \"sampling\": 0.5\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4ba9c2f9-8f2a-4aba-9ced-78c514547143",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Topic Name\",\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "93d1115a-7912-40a5-a65e-d9a5e1e68af0",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Topic Name\",\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "a14b9605-6922-49c0-9509-8da55873f880",
+              "name": "Too many mentions matching the query for your subscription plan.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Topic Name\",\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Payment Required",
+              "code": 402,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"HISTORY_LIMIT_EXCEEDED\",\n  \"message\": \"Too many mentions matching query. Please refine your search query or ask support for help\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7b65b718-d306-48ee-8097-98991898108e",
+              "name": "You don't have permission to create topics in the target space.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Topic Name\",\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"You don't have permission to create topics in this space\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "3840f3ea-3cb9-48fb-9030-9aec46d1a25d",
+          "name": "Preview topic",
+          "request": {
+            "name": "Preview topic",
+            "description": {
+              "content": "Estimate the number of monthly mentions for a topic query before creating a topic. This helps you check if your query is within your plan limits and if sampling is available.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                "preview"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"<string,null>\",\n    \"viQuery\": \"<string,null>\",\n    \"filter\": {\n      \"op\": \"<string>\",\n      \"filters\": [\n        {\n          \"fieldName\": \"<string>\",\n          \"op\": \"<string>\",\n          \"value\": \"<string>\"\n        },\n        {\n          \"fieldName\": \"<string>\",\n          \"op\": \"<string>\",\n          \"value\": \"<string>\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "48c5a6ed-d93d-499a-bc0e-5444dd7f1c4c",
+              "name": "Estimation result.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    "preview"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"monthlyCount\": 12345,\n  \"monthlyLimit\": 20000,\n  \"isWithinLimit\": true,\n  \"samplingAllowed\": true,\n  \"sampling\": 0.5\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d50828fc-3f98-4d47-beff-a5657dc4da57",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    "preview"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "af455f92-a17a-4f46-acc0-abe61db57853",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    "preview"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  },\n  \"sampling\": 0.5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "35bc9024-f3ab-4d05-ad4f-52d57094737f",
+          "name": "Update topic query",
+          "request": {
+            "name": "Update topic query",
+            "description": {
+              "content": "Updates an existing topic's query parameters.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId",
+                "query",
+                "edit"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"<string,null>\",\n    \"viQuery\": \"<string,null>\",\n    \"filter\": {\n      \"op\": \"<string>\",\n      \"filters\": [\n        {\n          \"fieldName\": \"<string>\",\n          \"op\": \"<string>\",\n          \"value\": \"<string>\"\n        },\n        {\n          \"fieldName\": \"<string>\",\n          \"op\": \"<string>\",\n          \"value\": \"<string>\"\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "016bf64b-d02d-4575-8ed0-96fbcdbd72ac",
+              "name": "Updated topic.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "query",
+                    "edit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"updated brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": 123,\n  \"name\": \"Topic Name\",\n  \"topicQuery\": {\n    \"textQuery\": \"updated brand OR company\",\n    \"viQuery\": \"logo:microsoft\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f38944ba-0076-41c1-83b0-20627b56f20e",
+              "name": "The request is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "query",
+                    "edit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"updated brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"message\": \"'TextQuery' should not be empty.\",\n  \"errors\": [\n    {\n      \"field\": \"TextQuery\",\n      \"errorCode\": \"notempty_error\",\n      \"message\": \"'TextQuery' should not be empty.\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9bb49f77-19ff-49c0-9fef-857e7a5a8a78",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "query",
+                    "edit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"updated brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "c7f9c667-cb22-417a-811b-71d34150d338",
+              "name": "Too many mentions matching the query for your subscription plan.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "query",
+                    "edit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"updated brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Payment Required",
+              "code": 402,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"errorCode\": \"HISTORY_LIMIT_EXCEEDED\",\n  \"message\": \"Too many mentions matching query. Please refine your search query or ask support for help\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ac024a2c-5e9d-4b41-8982-5e35c147b406",
+              "name": "Your permission level for this topic is too low for the action.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "query",
+                    "edit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"updated brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"THEME_PERMISSION_DENIED\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8ef2b669-de27-4fcc-a4de-c323228095f9",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId",
+                    "query",
+                    "edit"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topicQuery\": {\n    \"textQuery\": \"updated brand OR company\",\n    \"viQuery\": \"logo:microsoft\",\n    \"filter\": {\n      \"op\": \"and\",\n      \"filters\": [\n        {\n          \"fieldName\": \"country\",\n          \"op\": \"notOneOf\",\n          \"value\": \"[\\\"ua\\\"]\"\n        }\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "8ac33bc7-50c7-4d95-8b4b-5c8b18fedea2",
+          "name": "Delete topic",
+          "request": {
+            "name": "Delete topic",
+            "description": {
+              "content": "Deletes a topic and all its associated data. This action is irreversible.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "topics",
+                ":topicId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<integer>",
+                  "key": "topicId",
+                  "description": "(Required) ID of the Topic."
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "531e2b3d-82e1-459b-9337-55f667d7637b",
+              "name": "Topic deleted successfully.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "true",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "24636572-c823-4be9-b442-765ad0ac0a0a",
+              "name": "The API key is missing or invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "cb4e3aa7-810e-461d-b869-a8465f404c70",
+              "name": "Your permission level for this topic is too low for the action.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"THEME_PERMISSION_DENIED\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8697230e-4ec7-4eab-bbcd-4d9dc322856e",
+              "name": "Topic not found or you don't have access to it.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "topics",
+                    ":topicId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<integer>",
+                      "key": "topicId",
+                      "description": "(Required) ID of the Topic."
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "X-API-KEY",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Theme not found\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.youscan.io/api/external",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-KEY"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}"
+      },
+      {
+        "key": "in",
+        "value": "header"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "9ac378d5-1384-4d01-b4e9-94a2021bd65e",
+    "name": "YouScan Data Import Topics API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n\n\nContact Support:\n Name: YouScan Support",
+      "type": "text/plain"
+    }
+  }
+}
