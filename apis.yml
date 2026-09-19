@@ -316,6 +316,8 @@ apis:
   humanURL: https://developers.youscan.io/
   baseURL: https://api.youscan.io/api/external
   tags:
+  - Space
+  tags_raw:
   - Spaces
   properties:
   - type: OpenAPI
@@ -480,6 +482,8 @@ apis:
   humanURL: https://developers.youscan.io/
   baseURL: https://api.youscan.io/api/external
   tags:
+  - Topic
+  tags_raw:
   - Topics
   properties:
   - type: OpenAPI
