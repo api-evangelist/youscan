@@ -1,6 +1,6 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  title: YouScan Data Import Topics API
+  title: YouScan Topics API
   version: '1.0'
   contact:
     name: YouScan Support
@@ -8,7 +8,9 @@ info:
   license:
     name: Proprietary
     url: https://youscan.io/terms-of-service
-  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+  description: 'YouScan provides a REST API to manage topics, retrieve mentions, and query statistics
+
+    collected by the YouScan social media listening platform.'
 servers:
 - url: https://api.youscan.io/api/external
 security:
@@ -16,80 +18,7 @@ security:
 - ApiKeyQuery: []
 tags:
 - name: Topics
-  description: 'Create and manage topics — the monitoring entities that collect mentions matching your queries.
-
-
-    ### Topic query structure
-
-
-    A topic query consists of a `textQuery` and/or `viQuery` (at least one is required) plus an optional `filter`.
-
-
-    For all topic query filters, the following field names are supported:
-
-
-    - `country`: ISO2 country code (e.g. `country=US`, `country=UA`)
-
-    - `countryGroup`: Europe, Asia, NorthAmerica, CentralAmerica, TheCaribbean, SouthAmerica, Africa, Oceania (e.g. `countryGroup=Europe`)
-
-    - `language`: ISO639-2 language code (e.g. `language=ENG`, `language=UKR`)
-
-    - `source`: domain format (e.g. `source=instagram.com`)
-
-    - `sourceType`: social, messenger, reviews, news, blog, forum (e.g. `sourceType=social`)
-
-    - `postType`: post, repost, extendedRepost, comment (e.g. `postType=post`)
-
-    - `contentType`: text, link, image, video, poll, subtitles, sticker (e.g. `contentType=image`)
-
-    - `authorAge`: numeric value (e.g. `authorAge=18`)
-
-    - `authorSubscribers`: numeric value (e.g. `authorSubscribers=1000`)
-
-    - `gender`: `male` or `female` (e.g. `gender=male`)
-
-
-    Supported Visual Insights (VI) query values (used inside `viQuery`):
-
-
-    - `logo`: detect specific brand logos (e.g. `logo:"nike"`)
-
-    - `image.object`: find specific objects (e.g. `image.object:"car"`)
-
-    - `image.activity`: find activities (e.g. `image.activity:"cooking"`)
-
-    - `image.person`: find people types (e.g. `image.person:"athlete"`)
-
-    - `image.scene`: find settings (e.g. `image.scene:"beach"`)
-
-    - `image.type`: filter by image type (e.g. `image.type:"PHOTO"`)
-
-    - `image.subtype`: filter by image subtype (e.g. `image.subtype:"selfie"`)
-
-    - `text`: search mention text (e.g. `text:"sale"`)
-
-
-    Supported operations for each filter:
-
-
-    - `oneOf`: field value must match one of the specified values. Applicable to most fields.
-
-    - `notOneOf`: field value must not match any of the specified values. Applicable to most fields.
-
-    - `greaterOrEqual`: field value must be greater than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).
-
-    - `lessOrEqual`: field value must be less than or equal to the specified value. Numeric fields only (`authorAge`, `authorSubscribers`).
-
-
-    Each filter object must specify:
-
-    - `fieldName`: The field to filter on (see the list above)
-
-    - `op`: The operation to perform (see the list above)
-
-    - `value`: JSON-encoded array of values (e.g. `["ua"]`)
-
-    '
+  description: Create and manage topics — the monitoring entities that collect mentions matching your queries.
 paths:
   /topics:
     get:
@@ -202,9 +131,7 @@ paths:
       - Topics
       operationId: previewTopic
       summary: Preview topic
-      description: 'Estimate the number of monthly mentions for a topic query before creating a topic. This helps you check if your query is within your plan limits and if sampling is available.
-
-        '
+      description: Estimate the number of monthly mentions for a topic query before creating a topic. This helps you check if your query is within your plan limits and if sampling is available.
       requestBody:
         required: true
         content:
@@ -345,48 +272,44 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  responses:
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: THEME_PERMISSION_DENIED
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
-    Unauthorized:
-      description: The API key is missing or invalid.
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
-    HistoryLimitExceeded:
-      description: Too many mentions matching the query for your subscription plan.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            errorCode: HISTORY_LIMIT_EXCEEDED
-            message: Too many mentions matching query. Please refine your search query or ask support for help
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
   schemas:
+    TopicInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Topic ID.
+        name:
+          type: string
+          description: Topic name.
+        topicQuery:
+          $ref: '#/components/schemas/TopicQuery'
+        sampling:
+          type:
+          - number
+          - 'null'
+          description: Sampling rate, if sampling is enabled for the topic.
+    CustomFilter:
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - and
+          - or
+          description: How the listed filters are combined.
+        filters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterItem'
     ValidationError:
       type: object
       properties:
@@ -406,6 +329,20 @@ components:
                 type: string
               message:
                 type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
     FilterItem:
       type: object
       required:
@@ -465,57 +402,47 @@ components:
           - $ref: '#/components/schemas/CustomFilter'
           - type: 'null'
           description: Optional filter criteria (see the filter structure description in the Topics section).
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
-    CustomFilter:
-      type: object
-      properties:
-        op:
-          type: string
-          enum:
-          - and
-          - or
-          description: How the listed filters are combined.
-        filters:
-          type: array
-          items:
-            $ref: '#/components/schemas/FilterItem'
-    TopicInfo:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Topic ID.
-        name:
-          type: string
-          description: Topic name.
-        topicQuery:
-          $ref: '#/components/schemas/TopicQuery'
-        sampling:
-          type:
-          - number
-          - 'null'
-          description: Sampling rate, if sampling is enabled for the topic.
-  parameters:
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
+  responses:
+    Unauthorized:
+      description: The API key is missing or invalid.
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    HistoryLimitExceeded:
+      description: Too many mentions matching the query for your subscription plan.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            errorCode: HISTORY_LIMIT_EXCEEDED
+            message: Too many mentions matching query. Please refine your search query or ask support for help
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

@@ -1,6 +1,6 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  title: YouScan Data Import Mentions API
+  title: YouScan Mentions API
   version: '1.0'
   contact:
     name: YouScan Support
@@ -8,7 +8,9 @@ info:
   license:
     name: Proprietary
     url: https://youscan.io/terms-of-service
-  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+  description: 'YouScan provides a REST API to manage topics, retrieve mentions, and query statistics
+
+    collected by the YouScan social media listening platform.'
 servers:
 - url: https://api.youscan.io/api/external
 security:
@@ -16,7 +18,7 @@ security:
 - ApiKeyQuery: []
 tags:
 - name: Mentions
-  description: "Retrieve and update mentions collected in a topic.\n\n### How to effectively retrieve large sets of mentions\n\nCommon scenarios are:\n* Load all the mentions from a given topic for a given period\n* Periodically poll a topic to get new mentions (see the next section)\n\nEvery list response contains:\n\n- `total` — the number of mentions matching your filters, across all pages;\n- `mentions` — one page of results, at most `size` of them (default 10, max 1000);\n- `lastSeq` — a sequence-number high-water mark (see the cursor loop below).\n\nIf `total` exceeds the number of mentions you received, there is more to fetch. Use\nthe `sinceSeq` cursor: every mention has a `seq` number, assigned in the order\nmentions were saved to the topic, and cursor paging over it has no depth limit and\nnever skips or duplicates mentions.\n\nThe cursor loop:\n\n1. Start the session:\n   ```\n   GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&orderBy=seqAsc\n   ```\n   `orderBy=seqAsc` returns mentions in the order they were saved to the topic.\n2. Take the highest `seq` value from the returned `mentions` array and repeat the\n   request with `&sinceSeq={that value}`. `sinceSeq` is exclusive — the next page\n   starts right after it:\n   ```\n   GET https://api.youscan.io/api/external/topics/{topicId}/mentions?from=2018-01-01&size=1000&sinceSeq=8541234&orderBy=seqAsc\n   ```\n3. Stop when a response returns fewer than `size` mentions.\n\n### Polling for new mentions\n\nMentions are discovered with a delay — minutes to hours after publication — and\nhistory collection can add much older mentions at any time. Because `from`/`to` filter\nby *publication* date, repeatedly fetching a fixed window such as \"yesterday 22:00 —\ntoday 07:00\" misses every mention that was published inside the window but collected\nafter your request ran; such mentions never show up in any later window either.\n\nPoll with the cursor instead:\n\n1. Run the cursor loop above once and persist the highest `seq` you received.\n2. On every subsequent run, start with `sinceSeq={persisted value}&orderBy=seqAsc`,\n   drain the pages, and persist the new high-water mark.\n\nA mention gets its `seq` when it is saved to the topic, so late-arriving mentions are\nalways picked up by your next poll, no matter when they were published. Two additions:\n\n- If you also need fields that change *after* a mention is saved — engagement counts,\n  corrected sentiment, added tags — periodically re-fetch a trailing window (say, the\n  last 72 hours), or use the `engagementCollectedFrom` / `addedFrom` filters.\n- If you'd rather not poll at all, configure a webhook (see the Webhook section) and\n  receive each new mention the moment it is saved.\n\n### Dates and time zones\n\nDate filters match mentions by their **publication date**. Two rules save a lot of\nconfusion:\n\n- **Date values without an explicit UTC offset are interpreted in the API key owner's\n  time zone** — the time zone configured in the profile of the user the key belongs to.\n  To make requests unambiguous, always pass explicit offsets (`from=2026-06-01T00:00Z`)\n  or set the `timeZone` parameter.\n- **`to` is inclusive**: the effective upper bound is `to` plus one day. `to=2026-06-21`\n  includes the whole of June 21.\n\nThe platform UI always shows periods in the signed-in user's time zone. To reproduce a\nnumber seen in the UI, request the same period with `timeZone` set to that user's zone —\nor convert the period boundaries to UTC yourself.\n\n### Deleted data\n\nThe API returns the current state of the topic at the moment of the request:\n\n- a deleted topic returns `404` (`message: \"Theme not found\"`) — its mentions are no\n  longer accessible;\n- deleted tags disappear from mention responses — there is no \"deleted\" marker;\n- mentions moved to the Bin are excluded unless you pass `deleted=true`.\n\nData you exported earlier is not updated retroactively. If you keep a local copy,\nreconcile it periodically against the current *List topics* and *List tags* responses.\n\n### Data limitations\n\n> **Mentions from Reddit, Quora and several other forums and review websites are not accessible**\n> via the list mentions endpoint.\n\n> **Twitter data limitations**: We are limiting the data which can be accessed for mentions collected\n> from Twitter. The following adjustments are applied:\n> - Mention's Text and Full Text properties are removed\n> - Mention URL is removed\n> - Author URL, Author Name and Author AvatarUrl are removed\n> - Profile ID of the author is added to Author information (the ID itself is the ID of the Twitter Profile)\n> - Post ID is the ID of the Tweet\n> - Combining Profile ID and Post ID allows you to navigate to the exact Tweet which was collected\n>   as the corresponding mention.\n\n### Why API data may differ from the platform UI\n\nThe API and the platform read the same storage — for the same query they return the\nsame data. Almost every reported discrepancy turns out to be one of the causes\ndescribed above:\n\n1. **Time zones.** The UI uses the viewer's time zone; your request may be using a\n   different one — see *Dates and time zones*.\n2. **Sources not available via API.** Reddit, Quora and several other sources are\n   visible in the UI but never returned by the API. Exclude them in the UI search\n   before comparing counts — see *Data limitations*.\n3. **Pagination.** One request returns at most 1,000 mentions. Compare the response\n   `total` with the UI count, not the number of rows you fetched — see *How to\n   effectively retrieve large sets of mentions*.\n4. **Collection delays.** A period you fetched an hour ago may contain more mentions\n   now — see *Polling for new mentions*.\n5. **Twitter restrictions.** Twitter mentions come without text, URL and author\n   details, which makes row-by-row comparison with UI exports misleading — see\n   *Data limitations*.\n6. **Deleted data.** Deleted topics, tags and binned mentions disappear from\n   responses, while copies you saved earlier keep them — see *Deleted data*.\n\nIf the numbers still differ after checking all of the above, capture the exact request\nURL, the time you sent it, and the raw response — and contact support with those\ndetails.\n"
+  description: Retrieve and update mentions collected in a topic.
 paths:
   /topics/{topicId}/mentions:
     get:
@@ -29,9 +31,7 @@ paths:
 
         This endpoint is rate limited: no more than 10 requests per 10 seconds and no more than
 
-        5 concurrent requests per user. Requests beyond those limits are rejected with a 429 status code.
-
-        '
+        5 concurrent requests per user. Requests beyond those limits are rejected with a 429 status code.'
       parameters:
       - $ref: '#/components/parameters/TopicId'
       - name: from
@@ -456,9 +456,7 @@ paths:
       - Mentions
       operationId: getMentionsByIdsPost
       summary: Get mentions by IDs (POST)
-      description: 'Same as the GET variant, but accepts the IDs in the request body — useful when the list of IDs is too long for a URL. Maximum 500 IDs per request.
-
-        '
+      description: Same as the GET variant, but accepts the IDs in the request body — useful when the list of IDs is too long for a URL. Maximum 500 IDs per request.
       parameters:
       - $ref: '#/components/parameters/TopicId'
       requestBody:
@@ -507,9 +505,7 @@ paths:
       - Mentions
       operationId: bulkUpdateMentions
       summary: Bulk update mentions
-      description: 'Update mentions'' `tags` and `sentiment`, mark them as spam, or remove them. Maximum 100 mentions per request.
-
-        '
+      description: Update mentions' `tags` and `sentiment`, mark them as spam, or remove them. Maximum 100 mentions per request.
       parameters:
       - $ref: '#/components/parameters/TopicId'
       requestBody:
@@ -574,81 +570,44 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  responses:
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: THEME_PERMISSION_DENIED
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
-    Unauthorized:
-      description: The API key is missing or invalid.
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
   schemas:
-    SubCategory:
+    Sentiment:
+      type: string
+      enum:
+      - positive
+      - neutral
+      - negative
+      - undefined
+    Reactions:
       type: object
       properties:
-        id:
+        total:
           type: integer
-          description: Subcategory ID.
-        name:
-          type: string
-          description: Subcategory name.
-    ValidationError:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
+          description: Total number of reactions.
+        angry:
+          type:
+          - integer
+          - 'null'
+        haha:
+          type:
+          - integer
+          - 'null'
+        love:
+          type:
+          - integer
+          - 'null'
+        sad:
+          type:
+          - integer
+          - 'null'
+        wow:
+          type:
+          - integer
+          - 'null'
+        care:
+          type:
+          - integer
+          - 'null'
     MentionProfile:
       type: object
       properties:
@@ -720,6 +679,46 @@ components:
           items:
             type: string
           description: Author interest categories. Requires the Audience Insights addon.
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    PostType:
+      type: string
+      enum:
+      - post
+      - repost
+      - extendedRepost
+      - comment
     SourceTypeFilter:
       type: string
       enum:
@@ -729,130 +728,6 @@ components:
       - social
       - reviews
       - messenger
-    SourceSpecificFormat:
-      type: string
-      description: Source-specific format of the post.
-      enum:
-      - instagramReels
-      - instagramStories
-      - pinterestStoryPins
-      - youTubeShorts
-      - facebookReels
-      - facebookStories
-      - tikTokPhoto
-      - twitterNote
-      - youTubeLive
-      - facebookLive
-      - twitchLive
-      - twitterCommunityNote
-    Reactions:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: Total number of reactions.
-        angry:
-          type:
-          - integer
-          - 'null'
-        haha:
-          type:
-          - integer
-          - 'null'
-        love:
-          type:
-          - integer
-          - 'null'
-        sad:
-          type:
-          - integer
-          - 'null'
-        wow:
-          type:
-          - integer
-          - 'null'
-        care:
-          type:
-          - integer
-          - 'null'
-    MentionEngagement:
-      type: object
-      properties:
-        likes:
-          type:
-          - integer
-          - 'null'
-        dislikes:
-          type:
-          - integer
-          - 'null'
-        comments:
-          type:
-          - integer
-          - 'null'
-        reposts:
-          type:
-          - integer
-          - 'null'
-        views:
-          type:
-          - integer
-          - 'null'
-        reach:
-          type:
-          - integer
-          - 'null'
-        saves:
-          type:
-          - integer
-          - 'null'
-        impressions:
-          type:
-          - integer
-          - 'null'
-        engagement:
-          type:
-          - integer
-          - 'null'
-          description: Sum of likes, dislikes, comments and reposts.
-        reactions:
-          oneOf:
-          - $ref: '#/components/schemas/Reactions'
-          - type: 'null'
-        dateCollected:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: When the engagement data was last collected.
-    Category:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Category ID.
-        name:
-          type: string
-          description: Category name.
-        subCategories:
-          type: array
-          description: Configured (or, in mention responses, assigned) subcategories.
-          items:
-            $ref: '#/components/schemas/SubCategory'
-    PostType:
-      type: string
-      enum:
-      - post
-      - repost
-      - extendedRepost
-      - comment
-    Sentiment:
-      type: string
-      enum:
-      - positive
-      - neutral
-      - negative
-      - undefined
     Mention:
       type: object
       properties:
@@ -1143,6 +1018,95 @@ components:
           items:
             $ref: '#/components/schemas/Category'
           description: List of assigned categories grouped with assigned subcategories.
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Category ID.
+        name:
+          type: string
+          description: Category name.
+        subCategories:
+          type: array
+          description: Configured (or, in mention responses, assigned) subcategories.
+          items:
+            $ref: '#/components/schemas/SubCategory'
+    MentionEngagement:
+      type: object
+      properties:
+        likes:
+          type:
+          - integer
+          - 'null'
+        dislikes:
+          type:
+          - integer
+          - 'null'
+        comments:
+          type:
+          - integer
+          - 'null'
+        reposts:
+          type:
+          - integer
+          - 'null'
+        views:
+          type:
+          - integer
+          - 'null'
+        reach:
+          type:
+          - integer
+          - 'null'
+        saves:
+          type:
+          - integer
+          - 'null'
+        impressions:
+          type:
+          - integer
+          - 'null'
+        engagement:
+          type:
+          - integer
+          - 'null'
+          description: Sum of likes, dislikes, comments and reposts.
+        reactions:
+          oneOf:
+          - $ref: '#/components/schemas/Reactions'
+          - type: 'null'
+        dateCollected:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the engagement data was last collected.
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+      - instagramReels
+      - instagramStories
+      - pinterestStoryPins
+      - youTubeShorts
+      - facebookReels
+      - facebookStories
+      - tikTokPhoto
+      - twitterNote
+      - youTubeLive
+      - facebookLive
+      - twitchLive
+      - twitterCommunityNote
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
   parameters:
     TopicId:
       name: topicId
@@ -1151,6 +1115,38 @@ components:
       description: ID of the Topic.
       schema:
         type: integer
+  responses:
+    Unauthorized:
+      description: The API key is missing or invalid.
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
   title: YouScan Data Import API
   version: '1.0'
@@ -8,7 +8,9 @@ info:
   license:
     name: Proprietary
     url: https://youscan.io/terms-of-service
-  description: "YouScan provides a REST API to manage topics, retrieve mentions, and query statistics\ncollected by the YouScan social media listening platform.\n\n## Authentication\n\nYouScan API uses a token authentication scheme. Requests should contain the header\n`X-API-KEY` or, alternatively, an `apiKey` query parameter (for testing purposes).\n\n```bash\ncurl -X GET \\\n  --url \"https://api.youscan.io/api/external/topics\" \\\n  --header \"Accept: application/json\" \\\n  --header \"X-API-KEY: **********\"\n```\n\n## Permissions\n\nEach API key belongs to a single user in a single account and inherits that user's access.\nMost endpoints act on a topic, and what you may do depends on your permission level for it:\n\n- **View** — read mentions, statistics and tags; create and abort imports\n- **Edit** — View, plus create tags and bulk-update mentions\n- **Manage** — Edit, plus change the topic query, delete the topic, and start/stop history collection\n\nAdministrators and managers have full access to all topics in their spaces.\n\nWhen your access is insufficient, endpoints respond with:\n\n- **403 Forbidden** — you can see the topic but your permission level is too low for the action.\n- **404 Not Found** (`message: \"Theme not found\"`) — the topic doesn't exist or isn't visible\n  to your account. Existence is intentionally not revealed.\n- **402 Payment Required** — your subscription plan doesn't include the API access the\n  endpoint requires.\n\nCreating a topic also requires permission to create topics in the target space: administrators\nand managers always can; a regular member can only if granted the \"create topics\" permission,\notherwise the request returns **403**.\n\n## Rate limits\n\nWe recommend to use no more than 5 parallel API requests and no more than 10 requests per 10 seconds.\n\nRequests beyond those limits might be rejected with 429 status code (`Too Many Requests`).\n\n## Status and error codes\n\nYouScan uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nIn general, codes in the 200 range indicate success. Codes in the 400 range indicate an error\nthat failed given the information provided (for example, a required parameter was omitted).\nCodes in the 500 range indicate an error with YouScan's servers.\n\nBesides the status code, `errorCode` and `message` fields are returned in the response body for\nall types of client errors. The `errorCode` field should be used by robots, while `message`\ncontains user-friendly information.\n\nSending an invalid request results in a `400 Bad Request` response with `errorCode` equal to\n`VALIDATION_ERROR`:\n\n```json\n{\n  \"message\": \"Validation Failed -- 'Name' must be between 1 and 75 characters. You entered 500 characters.\",\n  \"errorCode\": \"VALIDATION_ERROR\",\n  \"errors\": [\n    {\n      \"field\": \"Name\",\n      \"errorCode\": \"length_error\",\n      \"message\": \"'Name' must be between 1 and 75 characters. You entered 500 characters.\"\n    }\n  ]\n}\n```\n"
+  description: 'YouScan provides a REST API to manage topics, retrieve mentions, and query statistics
+
+    collected by the YouScan social media listening platform.'
 servers:
 - url: https://api.youscan.io/api/external
 security:
@@ -23,9 +25,7 @@ tags:
     supported by YouScan.
 
 
-    **Beta Notice**: This API is currently in beta and may undergo minor changes.
-
-    '
+    **Beta Notice**: This API is currently in beta and may undergo minor changes.'
 paths:
   /topics/{topicId}/imports:
     post:
@@ -33,7 +33,36 @@ paths:
       - Data Import
       operationId: createImport
       summary: Create import
-      description: "Create a new data import job to import mentions into a topic.\n\nMaximum 100,000 mentions per import.\nIf items contain a large amount of data (such as lengthy text content), you may receive\na 413 (Content Too Large) error. In this case, try splitting your batch into smaller ones.\n\n**Each mention must have:**\n- A valid URL (required) — must be an absolute HTTP or HTTPS URL. If you want to import an item\n  without a URL, you should still create a fake unique-per-topic URL (https://mysite.com/1)\n- A published date (required) — cannot be empty\n- At least one content field: title, text, or imageUrl\n\n**Processing:**\n- Mentions are processed asynchronously after the import is created\n- Use the Get Import Status endpoint to track progress\n- Failed mentions can be retrieved using the Get Import Errors endpoint\n- Duplicate mentions (same URL) will be rejected with error code \"Duplicate\"\n"
+      description: 'Create a new data import job to import mentions into a topic.
+
+
+        Maximum 100,000 mentions per import.
+
+        If items contain a large amount of data (such as lengthy text content), you may receive
+
+        a 413 (Content Too Large) error. In this case, try splitting your batch into smaller ones.
+
+
+        **Each mention must have:**
+
+        - A valid URL (required) — must be an absolute HTTP or HTTPS URL. If you want to import an item
+
+        without a URL, you should still create a fake unique-per-topic URL (https://mysite.com/1)
+
+        - A published date (required) — cannot be empty
+
+        - At least one content field: title, text, or imageUrl
+
+
+        **Processing:**
+
+        - Mentions are processed asynchronously after the import is created
+
+        - Use the Get Import Status endpoint to track progress
+
+        - Failed mentions can be retrieved using the Get Import Errors endpoint
+
+        - Duplicate mentions (same URL) will be rejected with error code "Duplicate"'
       parameters:
       - $ref: '#/components/parameters/TopicId'
       requestBody:
@@ -341,151 +370,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  responses:
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
-    Unauthorized:
-      description: The API key is missing or invalid.
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
   schemas:
-    ImportError:
-      type: object
-      properties:
-        permaLink:
-          type: string
-          description: URL of the mention that failed.
-        error:
-          type: string
-          description: Error description.
-        errorCode:
-          type:
-          - string
-          - 'null'
-          description: Error code.
-        attemptCount:
-          type: integer
-          description: Number of processing attempts.
-        createdAt:
-          type: string
-          format: date-time
-          description: Error timestamp (ISO 8601).
-    ImportStatus:
-      type: object
-      properties:
-        importId:
-          type: integer
-          description: Unique import identifier.
-        name:
-          type:
-          - string
-          - 'null'
-          description: Import name.
-        totalMentions:
-          type: integer
-          description: Total number of mentions in the import.
-        savedCount:
-          type: integer
-          description: Number of successfully saved mentions.
-        failedCount:
-          type: integer
-          description: Number of failed mentions.
-        status:
-          type: string
-          enum:
-          - Pending
-          - Processing
-          - Completed
-          - Failed
-          - Aborted
-          description: Current import status.
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation timestamp (ISO 8601).
-        startedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Processing start timestamp (ISO 8601).
-        completedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Completion timestamp (ISO 8601).
-        lastError:
-          type:
-          - string
-          - 'null'
-          description: Last error message.
-        source:
-          type: string
-          description: Where the import was created from (e.g. "Api", "Ui").
-        userEmail:
-          type:
-          - string
-          - 'null'
-          description: Email of the user who created the import.
-        userName:
-          type:
-          - string
-          - 'null'
-          description: Name of the user who created the import.
-        canShowMentions:
-          type: boolean
-          description: Whether the imported mentions can be viewed in the topic.
-    ValidationError:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
     ImportMention:
       type: object
       required:
@@ -602,6 +487,159 @@ components:
         language:
           type: string
           description: Language code (e.g. "eng").
+    ImportStatus:
+      type: object
+      properties:
+        importId:
+          type: integer
+          description: Unique import identifier.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Import name.
+        totalMentions:
+          type: integer
+          description: Total number of mentions in the import.
+        savedCount:
+          type: integer
+          description: Number of successfully saved mentions.
+        failedCount:
+          type: integer
+          description: Number of failed mentions.
+        status:
+          type: string
+          enum:
+          - Pending
+          - Processing
+          - Completed
+          - Failed
+          - Aborted
+          description: Current import status.
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO 8601).
+        startedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Processing start timestamp (ISO 8601).
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Completion timestamp (ISO 8601).
+        lastError:
+          type:
+          - string
+          - 'null'
+          description: Last error message.
+        source:
+          type: string
+          description: Where the import was created from (e.g. "Api", "Ui").
+        userEmail:
+          type:
+          - string
+          - 'null'
+          description: Email of the user who created the import.
+        userName:
+          type:
+          - string
+          - 'null'
+          description: Name of the user who created the import.
+        canShowMentions:
+          type: boolean
+          description: Whether the imported mentions can be viewed in the topic.
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    ImportEngagement:
+      type: object
+      properties:
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        views:
+          type: integer
+        reactions:
+          type: integer
+          description: Total reactions.
+        reach:
+          type: integer
+          description: Potential reach.
+        impressions:
+          type: integer
+        saves:
+          type: integer
+    ImportGeo:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          description: ISO 2-letter country code (e.g. "US").
+        country:
+          type: string
+          description: Country name.
+        city:
+          type: string
+          description: City name.
+    ImportError:
+      type: object
+      properties:
+        permaLink:
+          type: string
+          description: URL of the mention that failed.
+        error:
+          type: string
+          description: Error description.
+        errorCode:
+          type:
+          - string
+          - 'null'
+          description: Error code.
+        attemptCount:
+          type: integer
+          description: Number of processing attempts.
+        createdAt:
+          type: string
+          format: date-time
+          description: Error timestamp (ISO 8601).
     ImportProfile:
       type: object
       properties:
@@ -638,47 +676,7 @@ components:
           description: Verification status.
         geo:
           $ref: '#/components/schemas/ImportGeo'
-    ImportEngagement:
-      type: object
-      properties:
-        likes:
-          type: integer
-        comments:
-          type: integer
-        shares:
-          type: integer
-        views:
-          type: integer
-        reactions:
-          type: integer
-          description: Total reactions.
-        reach:
-          type: integer
-          description: Potential reach.
-        impressions:
-          type: integer
-        saves:
-          type: integer
-    ImportGeo:
-      type: object
-      properties:
-        countryCode:
-          type: string
-          description: ISO 2-letter country code (e.g. "US").
-        country:
-          type: string
-          description: Country name.
-        city:
-          type: string
-          description: City name.
   parameters:
-    ImportId:
-      name: importId
-      in: path
-      required: true
-      description: ID of the Import.
-      schema:
-        type: integer
     TopicId:
       name: topicId
       in: path
@@ -686,6 +684,37 @@ components:
       description: ID of the Topic.
       schema:
         type: integer
+    ImportId:
+      name: importId
+      in: path
+      required: true
+      description: ID of the Import.
+      schema:
+        type: integer
+  responses:
+    Unauthorized:
+      description: The API key is missing or invalid.
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

@@ -58,36 +58,7 @@ notes: 'Only read/query operations are surfaced as candidate tools; write operat
   to status: published only if YouScan ships an official MCP server.'
 deployment:
   mode: none
-  endpoint: null
-  install: null
-  package: null
-  auth: unknown
   verified: derived
   tools: 8
-  checked: '2026-08-13'
-  source: catalog MCP census + 2026-08-13 re-search
-  re_search:
-    date: '2026-08-13'
-    result: no first-party MCP server exists, hosted or stdio
-    probes:
-    - url: https://mcp.youscan.io/mcp
-      method: 'POST tools/list'
-      status: 000
-      note: host does not resolve
-    - url: https://api.youscan.io/mcp
-      method: 'POST tools/list'
-      status: 404
-    - url: https://developers.youscan.io/mcp
-      method: 'POST tools/list'
-      status: 405
-      note: SPA host method-not-allowed, not an MCP endpoint
-    - url: https://registry.modelcontextprotocol.io/v0/servers?search=youscan
-      status: 200
-      result: 0 servers
-    - registry: npm
-      query: youscan
-      result: 0 packages
-    note: >-
-      Third-party "social listening" MCP servers exist (Syften, Octolens, dwarvesf) but none
-      wrap YouScan, and none are YouScan-published. No endpoint is recorded because inventing
-      one would read as a verified agent surface.
+  checked: '2026-08-12'
+  source: catalog MCP census

@@ -1,14 +1,7 @@
 {
   "provider": "youscan",
   "sources": [
-    "youscan-data-import-api-openapi.yml",
-    "youscan-history-api-openapi.yml",
-    "youscan-mentions-api-openapi.yml",
-    "youscan-spaces-api-openapi.yml",
-    "youscan-statistics-api-openapi.yml",
-    "youscan-tags-api-openapi.yml",
-    "youscan-topics-api-openapi.yml",
-    "youscan-webhook-api-openapi.yml"
+    "_original/youscan-openapi.yaml"
   ],
   "outputs": [
     "youscan-data-import-api-openapi.yml",
@@ -23,6 +16,19 @@
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "youscan-openapi.yaml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "youscan-data-import-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "youscan-history-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "youscan-mentions-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "youscan-spaces-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "youscan-statistics-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "youscan-tags-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "youscan-topics-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "youscan-webhook-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
