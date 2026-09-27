@@ -316,9 +316,11 @@ apis:
   humanURL: https://developers.youscan.io/
   baseURL: https://api.youscan.io/api/external
   tags:
+  - Spaces
   - Space
   tags_raw:
   - Spaces
+  - Space
   properties:
   - type: OpenAPI
     url: openapi/youscan-spaces-api-openapi.yml

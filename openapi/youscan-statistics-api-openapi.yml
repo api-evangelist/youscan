@@ -861,120 +861,6 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  parameters:
-    StatisticsExcludeSourceTypes:
-      name: excludeSourceTypes
-      in: query
-      description: Exclude mentions by source type. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          $ref: '#/components/schemas/SourceTypeFilter'
-    StatisticsExcludeTag:
-      name: excludeTag
-      in: query
-      description: Exclude mentions by tag IDs. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: integer
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
-    StatisticsExcludeSources:
-      name: excludeSources
-      in: query
-      description: Exclude mentions by source. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: string
-    StatisticsExcludeCountry:
-      name: excludeCountry
-      in: query
-      description: Exclude mentions by ISO alpha-2 country codes. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: string
-    StatisticsCountry:
-      name: country
-      in: query
-      description: Filter mentions by ISO alpha-2 country codes. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: string
-      example:
-      - us
-      - ua
-    StatisticsTo:
-      name: to
-      in: query
-      description: 'ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner''s time zone (see *Dates and time zones* in the Mentions section). Default - today.
-
-        '
-      schema:
-        type: string
-        format: date
-        example: '2024-12-31'
-    StatisticsFrom:
-      name: from
-      in: query
-      description: 'ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner''s time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.
-
-        '
-      schema:
-        type: string
-        format: date
-        example: '2024-01-01'
-    StatisticsTags:
-      name: tags
-      in: query
-      description: Filter mentions by tag IDs. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: integer
-    StatisticsSources:
-      name: sources
-      in: query
-      description: Filter mentions by source. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: string
-      example:
-      - telegram.me
-      - youscan.io
-    StatisticsSourceTypes:
-      name: sourceTypes
-      in: query
-      description: Filter mentions by source type. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          $ref: '#/components/schemas/SourceTypeFilter'
-  responses:
-    Unauthorized:
-      description: The API key is missing or invalid.
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
   schemas:
     ValidationError:
       type: object
@@ -995,18 +881,6 @@ components:
                 type: string
               message:
                 type: string
-    TermWithSentiments:
-      type: object
-      properties:
-        name:
-          type: string
-        count:
-          type: integer
-        sentiments:
-          type: array
-          description: Distribution by sentiment.
-          items:
-            $ref: '#/components/schemas/NameCount'
     NameCount:
       type: object
       properties:
@@ -1059,6 +933,132 @@ components:
                     type: integer
             otherCount:
               type: integer
+    TermWithSentiments:
+      type: object
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+        sentiments:
+          type: array
+          description: Distribution by sentiment.
+          items:
+            $ref: '#/components/schemas/NameCount'
+  parameters:
+    StatisticsFrom:
+      name: from
+      in: query
+      description: 'ISO formatted date from (`yyyy-MM-dd`). Filters by publication date; the day starts in the API key owner''s time zone (see *Dates and time zones* in the Mentions section). Default - 6 days before today.
+
+        '
+      schema:
+        type: string
+        format: date
+        example: '2024-01-01'
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+    StatisticsExcludeTag:
+      name: excludeTag
+      in: query
+      description: Exclude mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: integer
+    StatisticsSources:
+      name: sources
+      in: query
+      description: Filter mentions by source. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+      example:
+      - telegram.me
+      - youscan.io
+    StatisticsSourceTypes:
+      name: sourceTypes
+      in: query
+      description: Filter mentions by source type. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/SourceTypeFilter'
+    StatisticsCountry:
+      name: country
+      in: query
+      description: Filter mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+      example:
+      - us
+      - ua
+    StatisticsTo:
+      name: to
+      in: query
+      description: 'ISO formatted date to (`yyyy-MM-dd`), inclusive. The day ends in the API key owner''s time zone (see *Dates and time zones* in the Mentions section). Default - today.
+
+        '
+      schema:
+        type: string
+        format: date
+        example: '2024-12-31'
+    StatisticsExcludeCountry:
+      name: excludeCountry
+      in: query
+      description: Exclude mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+    StatisticsExcludeSources:
+      name: excludeSources
+      in: query
+      description: Exclude mentions by source. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+    StatisticsTags:
+      name: tags
+      in: query
+      description: Filter mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: integer
+    StatisticsExcludeSourceTypes:
+      name: excludeSourceTypes
+      in: query
+      description: Exclude mentions by source type. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/SourceTypeFilter'
+  responses:
+    Unauthorized:
+      description: The API key is missing or invalid.
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

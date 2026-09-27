@@ -272,44 +272,21 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  parameters:
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
   schemas:
-    TopicInfo:
+    Error:
       type: object
       properties:
-        id:
-          type: integer
-          description: Topic ID.
-        name:
+        errorCode:
           type: string
-          description: Topic name.
-        topicQuery:
-          $ref: '#/components/schemas/TopicQuery'
-        sampling:
-          type:
-          - number
-          - 'null'
-          description: Sampling rate, if sampling is enabled for the topic.
-    CustomFilter:
-      type: object
-      properties:
-        op:
+          description: Machine-readable error code.
+        message:
           type: string
-          enum:
-          - and
-          - or
-          description: How the listed filters are combined.
-        filters:
-          type: array
-          items:
-            $ref: '#/components/schemas/FilterItem'
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
     ValidationError:
       type: object
       properties:
@@ -329,20 +306,22 @@ components:
                 type: string
               message:
                 type: string
-    Error:
+    TopicInfo:
       type: object
       properties:
-        errorCode:
+        id:
+          type: integer
+          description: Topic ID.
+        name:
           type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
+          description: Topic name.
+        topicQuery:
+          $ref: '#/components/schemas/TopicQuery'
+        sampling:
+          type:
+          - number
+          - 'null'
+          description: Sampling rate, if sampling is enabled for the topic.
     FilterItem:
       type: object
       required:
@@ -402,22 +381,30 @@ components:
           - $ref: '#/components/schemas/CustomFilter'
           - type: 'null'
           description: Optional filter criteria (see the filter structure description in the Topics section).
+    CustomFilter:
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - and
+          - or
+          description: How the listed filters are combined.
+        filters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterItem'
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
   responses:
     Unauthorized:
       description: The API key is missing or invalid.
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
     HistoryLimitExceeded:
       description: Too many mentions matching the query for your subscription plan.
       content:
@@ -435,6 +422,19 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             message: Theme not found
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
     Forbidden:
       description: Your permission level for this topic is too low for the action.
       content:

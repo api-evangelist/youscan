@@ -93,8 +93,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   responses:
-    Unauthorized:
-      description: The API key is missing or invalid.
     SpaceNotFound:
       description: Space not found or you don't have access to it.
       content:
@@ -105,6 +103,8 @@ components:
             errorCode: RESOURCE_NOT_FOUND
             message: Space not found
             resourceType: Space
+    Unauthorized:
+      description: The API key is missing or invalid.
   schemas:
     Error:
       type: object
@@ -120,20 +120,6 @@ components:
           description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
 
             '
-    Category:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Category ID.
-        name:
-          type: string
-          description: Category name.
-        subCategories:
-          type: array
-          description: Configured (or, in mention responses, assigned) subcategories.
-          items:
-            $ref: '#/components/schemas/SubCategory'
     Space:
       type: object
       properties:
@@ -152,6 +138,20 @@ components:
         name:
           type: string
           description: Subcategory name.
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Category ID.
+        name:
+          type: string
+          description: Category name.
+        subCategories:
+          type: array
+          description: Configured (or, in mention responses, assigned) subcategories.
+          items:
+            $ref: '#/components/schemas/SubCategory'
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

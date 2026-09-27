@@ -571,43 +571,48 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    Sentiment:
-      type: string
-      enum:
-      - positive
-      - neutral
-      - negative
-      - undefined
-    Reactions:
+    Error:
       type: object
       properties:
-        total:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    SubCategory:
+      type: object
+      properties:
+        id:
           type: integer
-          description: Total number of reactions.
-        angry:
-          type:
-          - integer
-          - 'null'
-        haha:
-          type:
-          - integer
-          - 'null'
-        love:
-          type:
-          - integer
-          - 'null'
-        sad:
-          type:
-          - integer
-          - 'null'
-        wow:
-          type:
-          - integer
-          - 'null'
-        care:
-          type:
-          - integer
-          - 'null'
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
     MentionProfile:
       type: object
       properties:
@@ -679,55 +684,27 @@ components:
           items:
             type: string
           description: Author interest categories. Requires the Audience Insights addon.
-    ValidationError:
+    Category:
       type: object
       properties:
-        errorCode:
+        id:
+          type: integer
+          description: Category ID.
+        name:
           type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
+          description: Category name.
+        subCategories:
           type: array
+          description: Configured (or, in mention responses, assigned) subcategories.
           items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
-    PostType:
+            $ref: '#/components/schemas/SubCategory'
+    Sentiment:
       type: string
       enum:
-      - post
-      - repost
-      - extendedRepost
-      - comment
-    SourceTypeFilter:
-      type: string
-      enum:
-      - blog
-      - forum
-      - news
-      - social
-      - reviews
-      - messenger
+      - positive
+      - neutral
+      - negative
+      - undefined
     Mention:
       type: object
       properties:
@@ -1018,20 +995,22 @@ components:
           items:
             $ref: '#/components/schemas/Category'
           description: List of assigned categories grouped with assigned subcategories.
-    Category:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Category ID.
-        name:
-          type: string
-          description: Category name.
-        subCategories:
-          type: array
-          description: Configured (or, in mention responses, assigned) subcategories.
-          items:
-            $ref: '#/components/schemas/SubCategory'
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+      - instagramReels
+      - instagramStories
+      - pinterestStoryPins
+      - youTubeShorts
+      - facebookReels
+      - facebookStories
+      - tikTokPhoto
+      - twitterNote
+      - youTubeLive
+      - facebookLive
+      - twitchLive
+      - twitterCommunityNote
     MentionEngagement:
       type: object
       properties:
@@ -1082,31 +1061,52 @@ components:
           - 'null'
           format: date-time
           description: When the engagement data was last collected.
-    SourceSpecificFormat:
+    SourceTypeFilter:
       type: string
-      description: Source-specific format of the post.
       enum:
-      - instagramReels
-      - instagramStories
-      - pinterestStoryPins
-      - youTubeShorts
-      - facebookReels
-      - facebookStories
-      - tikTokPhoto
-      - twitterNote
-      - youTubeLive
-      - facebookLive
-      - twitchLive
-      - twitterCommunityNote
-    SubCategory:
+      - blog
+      - forum
+      - news
+      - social
+      - reviews
+      - messenger
+    Reactions:
       type: object
       properties:
-        id:
+        total:
           type: integer
-          description: Subcategory ID.
-        name:
-          type: string
-          description: Subcategory name.
+          description: Total number of reactions.
+        angry:
+          type:
+          - integer
+          - 'null'
+        haha:
+          type:
+          - integer
+          - 'null'
+        love:
+          type:
+          - integer
+          - 'null'
+        sad:
+          type:
+          - integer
+          - 'null'
+        wow:
+          type:
+          - integer
+          - 'null'
+        care:
+          type:
+          - integer
+          - 'null'
+    PostType:
+      type: string
+      enum:
+      - post
+      - repost
+      - extendedRepost
+      - comment
   parameters:
     TopicId:
       name: topicId
@@ -1116,8 +1116,24 @@ components:
       schema:
         type: integer
   responses:
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
     Unauthorized:
       description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
     ValidationError:
       description: The request is invalid.
       content:
@@ -1131,22 +1147,6 @@ components:
             - field: TextQuery
               errorCode: notempty_error
               message: '''TextQuery'' should not be empty.'
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: THEME_PERMISSION_DENIED
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

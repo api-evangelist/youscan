@@ -95,43 +95,47 @@ components:
       - neutral
       - negative
       - undefined
-    Reactions:
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+      - instagramReels
+      - instagramStories
+      - pinterestStoryPins
+      - youTubeShorts
+      - facebookReels
+      - facebookStories
+      - tikTokPhoto
+      - twitterNote
+      - youTubeLive
+      - facebookLive
+      - twitchLive
+      - twitterCommunityNote
+    WebhookProfile:
       type: object
       properties:
-        total:
+        url:
+          type: string
+          description: Link to the profile.
+        name:
+          type: string
+        nickname:
+          type: string
+        profileId:
+          type: string
+          description: Profile ID in the source system.
+        profileType:
+          type: string
+          description: Profile type, specific to the source.
+        avatarUrl:
+          type: string
+          description: Avatar image URL.
+        subscribers:
           type: integer
-          description: Total number of reactions.
-        angry:
-          type:
-          - integer
-          - 'null'
-        haha:
-          type:
-          - integer
-          - 'null'
-        love:
-          type:
-          - integer
-          - 'null'
-        sad:
-          type:
-          - integer
-          - 'null'
-        wow:
-          type:
-          - integer
-          - 'null'
-        care:
-          type:
-          - integer
-          - 'null'
-    PostType:
-      type: string
-      enum:
-      - post
-      - repost
-      - extendedRepost
-      - comment
+          description: Number of subscribers (followers, friends).
+        age:
+          type: integer
+          description: Author age. Sent only for accounts with the extended webhook feature enabled.
     WebhookMention:
       type: object
       required:
@@ -296,47 +300,43 @@ components:
           items:
             type: string
           description: Brands detected on the image. Requires the Visual Insights option.
-    WebhookProfile:
+    Reactions:
       type: object
       properties:
-        url:
-          type: string
-          description: Link to the profile.
-        name:
-          type: string
-        nickname:
-          type: string
-        profileId:
-          type: string
-          description: Profile ID in the source system.
-        profileType:
-          type: string
-          description: Profile type, specific to the source.
-        avatarUrl:
-          type: string
-          description: Avatar image URL.
-        subscribers:
+        total:
           type: integer
-          description: Number of subscribers (followers, friends).
-        age:
-          type: integer
-          description: Author age. Sent only for accounts with the extended webhook feature enabled.
-    SourceSpecificFormat:
+          description: Total number of reactions.
+        angry:
+          type:
+          - integer
+          - 'null'
+        haha:
+          type:
+          - integer
+          - 'null'
+        love:
+          type:
+          - integer
+          - 'null'
+        sad:
+          type:
+          - integer
+          - 'null'
+        wow:
+          type:
+          - integer
+          - 'null'
+        care:
+          type:
+          - integer
+          - 'null'
+    PostType:
       type: string
-      description: Source-specific format of the post.
       enum:
-      - instagramReels
-      - instagramStories
-      - pinterestStoryPins
-      - youTubeShorts
-      - facebookReels
-      - facebookStories
-      - tikTokPhoto
-      - twitterNote
-      - youTubeLive
-      - facebookLive
-      - twitchLive
-      - twitterCommunityNote
+      - post
+      - repost
+      - extendedRepost
+      - comment
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

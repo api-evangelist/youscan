@@ -116,47 +116,21 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  parameters:
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
-  responses:
-    Unauthorized:
-      description: The API key is missing or invalid.
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: THEME_PERMISSION_DENIED
   schemas:
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
     ValidationError:
       type: object
       properties:
@@ -176,20 +150,6 @@ components:
                 type: string
               message:
                 type: string
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
     HistoryJobDetails:
       type: object
       properties:
@@ -273,6 +233,46 @@ components:
         duplicates: 100
         skipped: 20
         invalid: 4
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+  responses:
+    Unauthorized:
+      description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
   securitySchemes:
     ApiKeyHeader:
       type: apiKey
