@@ -272,56 +272,61 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  schemas:
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
+  responses:
+    HistoryLimitExceeded:
+      description: Too many mentions matching the query for your subscription plan.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            errorCode: HISTORY_LIMIT_EXCEEDED
+            message: Too many mentions matching query. Please refine your search query or ask support for help
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
+    Unauthorized:
+      description: The API key is missing or invalid.
     ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+  schemas:
+    CustomFilter:
       type: object
       properties:
-        errorCode:
+        op:
           type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
+          enum:
+          - and
+          - or
+          description: How the listed filters are combined.
+        filters:
           type: array
           items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
-    TopicInfo:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Topic ID.
-        name:
-          type: string
-          description: Topic name.
-        topicQuery:
-          $ref: '#/components/schemas/TopicQuery'
-        sampling:
-          type:
-          - number
-          - 'null'
-          description: Sampling rate, if sampling is enabled for the topic.
+            $ref: '#/components/schemas/FilterItem'
     FilterItem:
       type: object
       required:
@@ -381,19 +386,55 @@ components:
           - $ref: '#/components/schemas/CustomFilter'
           - type: 'null'
           description: Optional filter criteria (see the filter structure description in the Topics section).
-    CustomFilter:
+    ValidationError:
       type: object
       properties:
-        op:
+        errorCode:
           type: string
-          enum:
-          - and
-          - or
-          description: How the listed filters are combined.
-        filters:
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
           type: array
           items:
-            $ref: '#/components/schemas/FilterItem'
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    TopicInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Topic ID.
+        name:
+          type: string
+          description: Topic name.
+        topicQuery:
+          $ref: '#/components/schemas/TopicQuery'
+        sampling:
+          type:
+          - number
+          - 'null'
+          description: Sampling rate, if sampling is enabled for the topic.
   parameters:
     TopicId:
       name: topicId
@@ -402,47 +443,6 @@ components:
       description: ID of the Topic.
       schema:
         type: integer
-  responses:
-    Unauthorized:
-      description: The API key is missing or invalid.
-    HistoryLimitExceeded:
-      description: Too many mentions matching the query for your subscription plan.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            errorCode: HISTORY_LIMIT_EXCEEDED
-            message: Too many mentions matching query. Please refine your search query or ask support for help
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: THEME_PERMISSION_DENIED
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

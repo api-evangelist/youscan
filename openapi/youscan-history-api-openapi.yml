@@ -117,39 +117,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
-    ValidationError:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
     HistoryJobDetails:
       type: object
       properties:
@@ -233,17 +200,40 @@ components:
         duplicates: 100
         skipped: 20
         invalid: 4
-  parameters:
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
   responses:
-    Unauthorized:
-      description: The API key is missing or invalid.
     TopicNotFound:
       description: Topic not found or you don't have access to it.
       content:
@@ -252,6 +242,8 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             message: Theme not found
+    Unauthorized:
+      description: The API key is missing or invalid.
     ValidationError:
       description: The request is invalid.
       content:
@@ -273,6 +265,14 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             message: THEME_PERMISSION_DENIED
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

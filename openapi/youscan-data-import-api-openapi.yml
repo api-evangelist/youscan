@@ -371,108 +371,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
-    ValidationError:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
-    ImportProfile:
-      type: object
-      properties:
-        profileId:
-          type: string
-          description: Unique identifier of the profile.
-        name:
-          type: string
-          description: Display name.
-        nickname:
-          type: string
-          description: Username/handle.
-        description:
-          type: string
-          description: Profile description/bio.
-        url:
-          type: string
-          description: Profile URL.
-        avatarUrl:
-          type: string
-          description: Avatar image URL.
-        subscribers:
-          type: integer
-          description: Number of subscribers/followers.
-        gender:
-          type: string
-          enum:
-          - M
-          - F
-          - Community
-          description: Gender. Use "Community" to mark non-person profiles (like a Facebook group or channel).
-        isVerified:
-          type: boolean
-          description: Verification status.
-        geo:
-          $ref: '#/components/schemas/ImportGeo'
-    ImportError:
-      type: object
-      properties:
-        permaLink:
-          type: string
-          description: URL of the mention that failed.
-        error:
-          type: string
-          description: Error description.
-        errorCode:
-          type:
-          - string
-          - 'null'
-          description: Error code.
-        attemptCount:
-          type: integer
-          description: Number of processing attempts.
-        createdAt:
-          type: string
-          format: date-time
-          description: Error timestamp (ISO 8601).
-    ImportGeo:
-      type: object
-      properties:
-        countryCode:
-          type: string
-          description: ISO 2-letter country code (e.g. "US").
-        country:
-          type: string
-          description: Country name.
-        city:
-          type: string
-          description: City name.
     ImportStatus:
       type: object
       properties:
@@ -539,27 +437,63 @@ components:
         canShowMentions:
           type: boolean
           description: Whether the imported mentions can be viewed in the topic.
-    ImportEngagement:
+    ImportError:
       type: object
       properties:
-        likes:
+        permaLink:
+          type: string
+          description: URL of the mention that failed.
+        error:
+          type: string
+          description: Error description.
+        errorCode:
+          type:
+          - string
+          - 'null'
+          description: Error code.
+        attemptCount:
           type: integer
-        comments:
+          description: Number of processing attempts.
+        createdAt:
+          type: string
+          format: date-time
+          description: Error timestamp (ISO 8601).
+    ImportProfile:
+      type: object
+      properties:
+        profileId:
+          type: string
+          description: Unique identifier of the profile.
+        name:
+          type: string
+          description: Display name.
+        nickname:
+          type: string
+          description: Username/handle.
+        description:
+          type: string
+          description: Profile description/bio.
+        url:
+          type: string
+          description: Profile URL.
+        avatarUrl:
+          type: string
+          description: Avatar image URL.
+        subscribers:
           type: integer
-        shares:
-          type: integer
-        views:
-          type: integer
-        reactions:
-          type: integer
-          description: Total reactions.
-        reach:
-          type: integer
-          description: Potential reach.
-        impressions:
-          type: integer
-        saves:
-          type: integer
+          description: Number of subscribers/followers.
+        gender:
+          type: string
+          enum:
+          - M
+          - F
+          - Community
+          description: Gender. Use "Community" to mark non-person profiles (like a Facebook group or channel).
+        isVerified:
+          type: boolean
+          description: Verification status.
+        geo:
+          $ref: '#/components/schemas/ImportGeo'
     ImportMention:
       type: object
       required:
@@ -676,24 +610,73 @@ components:
         language:
           type: string
           description: Language code (e.g. "eng").
-  parameters:
-    ImportId:
-      name: importId
-      in: path
-      required: true
-      description: ID of the Import.
-      schema:
-        type: integer
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    ImportGeo:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          description: ISO 2-letter country code (e.g. "US").
+        country:
+          type: string
+          description: Country name.
+        city:
+          type: string
+          description: City name.
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    ImportEngagement:
+      type: object
+      properties:
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        views:
+          type: integer
+        reactions:
+          type: integer
+          description: Total reactions.
+        reach:
+          type: integer
+          description: Potential reach.
+        impressions:
+          type: integer
+        saves:
+          type: integer
   responses:
-    Unauthorized:
-      description: The API key is missing or invalid.
     TopicNotFound:
       description: Topic not found or you don't have access to it.
       content:
@@ -702,6 +685,8 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             message: Theme not found
+    Unauthorized:
+      description: The API key is missing or invalid.
     ValidationError:
       description: The request is invalid.
       content:
@@ -715,6 +700,21 @@ components:
             - field: TextQuery
               errorCode: notempty_error
               message: '''TextQuery'' should not be empty.'
+  parameters:
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+    ImportId:
+      name: importId
+      in: path
+      required: true
+      description: ID of the Import.
+      schema:
+        type: integer
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

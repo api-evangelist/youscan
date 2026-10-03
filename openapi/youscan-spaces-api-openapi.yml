@@ -92,34 +92,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  responses:
-    SpaceNotFound:
-      description: Space not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            errorCode: RESOURCE_NOT_FOUND
-            message: Space not found
-            resourceType: Space
-    Unauthorized:
-      description: The API key is missing or invalid.
   schemas:
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
     Space:
       type: object
       properties:
@@ -129,15 +102,6 @@ components:
         name:
           type: string
           description: Space name.
-    SubCategory:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Subcategory ID.
-        name:
-          type: string
-          description: Subcategory name.
     Category:
       type: object
       properties:
@@ -152,6 +116,42 @@ components:
           description: Configured (or, in mention responses, assigned) subcategories.
           items:
             $ref: '#/components/schemas/SubCategory'
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
+  responses:
+    Unauthorized:
+      description: The API key is missing or invalid.
+    SpaceNotFound:
+      description: Space not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            errorCode: RESOURCE_NOT_FOUND
+            message: Space not found
+            resourceType: Space
   securitySchemes:
     ApiKeyHeader:
       type: apiKey
