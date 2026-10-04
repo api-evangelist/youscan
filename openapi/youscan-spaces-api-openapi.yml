@@ -93,15 +93,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    Space:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Space ID.
-        name:
-          type: string
-          description: Space name.
     Category:
       type: object
       properties:
@@ -116,6 +107,15 @@ components:
           description: Configured (or, in mention responses, assigned) subcategories.
           items:
             $ref: '#/components/schemas/SubCategory'
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
     Error:
       type: object
       properties:
@@ -130,15 +130,15 @@ components:
           description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
 
             '
-    SubCategory:
+    Space:
       type: object
       properties:
         id:
           type: integer
-          description: Subcategory ID.
+          description: Space ID.
         name:
           type: string
-          description: Subcategory name.
+          description: Space name.
   responses:
     Unauthorized:
       description: The API key is missing or invalid.

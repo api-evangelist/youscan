@@ -370,130 +370,52 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
+  responses:
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    Unauthorized:
+      description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
   schemas:
-    ImportStatus:
+    ImportEngagement:
       type: object
       properties:
-        importId:
+        likes:
           type: integer
-          description: Unique import identifier.
-        name:
-          type:
-          - string
-          - 'null'
-          description: Import name.
-        totalMentions:
+        comments:
           type: integer
-          description: Total number of mentions in the import.
-        savedCount:
+        shares:
           type: integer
-          description: Number of successfully saved mentions.
-        failedCount:
+        views:
           type: integer
-          description: Number of failed mentions.
-        status:
-          type: string
-          enum:
-          - Pending
-          - Processing
-          - Completed
-          - Failed
-          - Aborted
-          description: Current import status.
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation timestamp (ISO 8601).
-        startedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Processing start timestamp (ISO 8601).
-        completedAt:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Completion timestamp (ISO 8601).
-        lastError:
-          type:
-          - string
-          - 'null'
-          description: Last error message.
-        source:
-          type: string
-          description: Where the import was created from (e.g. "Api", "Ui").
-        userEmail:
-          type:
-          - string
-          - 'null'
-          description: Email of the user who created the import.
-        userName:
-          type:
-          - string
-          - 'null'
-          description: Name of the user who created the import.
-        canShowMentions:
-          type: boolean
-          description: Whether the imported mentions can be viewed in the topic.
-    ImportError:
-      type: object
-      properties:
-        permaLink:
-          type: string
-          description: URL of the mention that failed.
-        error:
-          type: string
-          description: Error description.
-        errorCode:
-          type:
-          - string
-          - 'null'
-          description: Error code.
-        attemptCount:
+        reactions:
           type: integer
-          description: Number of processing attempts.
-        createdAt:
-          type: string
-          format: date-time
-          description: Error timestamp (ISO 8601).
-    ImportProfile:
-      type: object
-      properties:
-        profileId:
-          type: string
-          description: Unique identifier of the profile.
-        name:
-          type: string
-          description: Display name.
-        nickname:
-          type: string
-          description: Username/handle.
-        description:
-          type: string
-          description: Profile description/bio.
-        url:
-          type: string
-          description: Profile URL.
-        avatarUrl:
-          type: string
-          description: Avatar image URL.
-        subscribers:
+          description: Total reactions.
+        reach:
           type: integer
-          description: Number of subscribers/followers.
-        gender:
-          type: string
-          enum:
-          - M
-          - F
-          - Community
-          description: Gender. Use "Community" to mark non-person profiles (like a Facebook group or channel).
-        isVerified:
-          type: boolean
-          description: Verification status.
-        geo:
-          $ref: '#/components/schemas/ImportGeo'
+          description: Potential reach.
+        impressions:
+          type: integer
+        saves:
+          type: integer
     ImportMention:
       type: object
       required:
@@ -610,6 +532,120 @@ components:
         language:
           type: string
           description: Language code (e.g. "eng").
+    ImportGeo:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          description: ISO 2-letter country code (e.g. "US").
+        country:
+          type: string
+          description: Country name.
+        city:
+          type: string
+          description: City name.
+    ImportProfile:
+      type: object
+      properties:
+        profileId:
+          type: string
+          description: Unique identifier of the profile.
+        name:
+          type: string
+          description: Display name.
+        nickname:
+          type: string
+          description: Username/handle.
+        description:
+          type: string
+          description: Profile description/bio.
+        url:
+          type: string
+          description: Profile URL.
+        avatarUrl:
+          type: string
+          description: Avatar image URL.
+        subscribers:
+          type: integer
+          description: Number of subscribers/followers.
+        gender:
+          type: string
+          enum:
+          - M
+          - F
+          - Community
+          description: Gender. Use "Community" to mark non-person profiles (like a Facebook group or channel).
+        isVerified:
+          type: boolean
+          description: Verification status.
+        geo:
+          $ref: '#/components/schemas/ImportGeo'
+    ImportStatus:
+      type: object
+      properties:
+        importId:
+          type: integer
+          description: Unique import identifier.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Import name.
+        totalMentions:
+          type: integer
+          description: Total number of mentions in the import.
+        savedCount:
+          type: integer
+          description: Number of successfully saved mentions.
+        failedCount:
+          type: integer
+          description: Number of failed mentions.
+        status:
+          type: string
+          enum:
+          - Pending
+          - Processing
+          - Completed
+          - Failed
+          - Aborted
+          description: Current import status.
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO 8601).
+        startedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Processing start timestamp (ISO 8601).
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Completion timestamp (ISO 8601).
+        lastError:
+          type:
+          - string
+          - 'null'
+          description: Last error message.
+        source:
+          type: string
+          description: Where the import was created from (e.g. "Api", "Ui").
+        userEmail:
+          type:
+          - string
+          - 'null'
+          description: Email of the user who created the import.
+        userName:
+          type:
+          - string
+          - 'null'
+          description: Name of the user who created the import.
+        canShowMentions:
+          type: boolean
+          description: Whether the imported mentions can be viewed in the topic.
     ValidationError:
       type: object
       properties:
@@ -629,18 +665,27 @@ components:
                 type: string
               message:
                 type: string
-    ImportGeo:
+    ImportError:
       type: object
       properties:
-        countryCode:
+        permaLink:
           type: string
-          description: ISO 2-letter country code (e.g. "US").
-        country:
+          description: URL of the mention that failed.
+        error:
           type: string
-          description: Country name.
-        city:
+          description: Error description.
+        errorCode:
+          type:
+          - string
+          - 'null'
+          description: Error code.
+        attemptCount:
+          type: integer
+          description: Number of processing attempts.
+        createdAt:
           type: string
-          description: City name.
+          format: date-time
+          description: Error timestamp (ISO 8601).
     Error:
       type: object
       properties:
@@ -655,51 +700,6 @@ components:
           description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
 
             '
-    ImportEngagement:
-      type: object
-      properties:
-        likes:
-          type: integer
-        comments:
-          type: integer
-        shares:
-          type: integer
-        views:
-          type: integer
-        reactions:
-          type: integer
-          description: Total reactions.
-        reach:
-          type: integer
-          description: Potential reach.
-        impressions:
-          type: integer
-        saves:
-          type: integer
-  responses:
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
-    Unauthorized:
-      description: The API key is missing or invalid.
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
   parameters:
     TopicId:
       name: topicId

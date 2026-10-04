@@ -571,179 +571,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    Reactions:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: Total number of reactions.
-        angry:
-          type:
-          - integer
-          - 'null'
-        haha:
-          type:
-          - integer
-          - 'null'
-        love:
-          type:
-          - integer
-          - 'null'
-        sad:
-          type:
-          - integer
-          - 'null'
-        wow:
-          type:
-          - integer
-          - 'null'
-        care:
-          type:
-          - integer
-          - 'null'
-    Sentiment:
-      type: string
-      enum:
-      - positive
-      - neutral
-      - negative
-      - undefined
-    MentionProfile:
-      type: object
-      properties:
-        profileId:
-          type:
-          - string
-          - 'null'
-          description: Profile ID in the source system.
-        url:
-          type:
-          - string
-          - 'null'
-          description: Link to the profile.
-        name:
-          type:
-          - string
-          - 'null'
-          description: Display name.
-        nickname:
-          type:
-          - string
-          - 'null'
-          description: Username/handle.
-        bio:
-          type:
-          - string
-          - 'null'
-          description: Profile description. Available for authors only.
-        avatarUrl:
-          type:
-          - string
-          - 'null'
-          description: URL to the avatar image.
-        subscribers:
-          type:
-          - integer
-          - 'null'
-          description: Number of friends and/or followers.
-        gender:
-          type: string
-          enum:
-          - unknown
-          - community
-          - male
-          - female
-        age:
-          type:
-          - integer
-          - 'null'
-          description: Author age. Available for authors only.
-        jobs:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Author job categories. Requires the Audience Insights addon.
-        interests:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Author interests. Requires the Audience Insights addon.
-        interestCategories:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Author interest categories. Requires the Audience Insights addon.
-    SubCategory:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Subcategory ID.
-        name:
-          type: string
-          description: Subcategory name.
-    ValidationError:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
-    SourceSpecificFormat:
-      type: string
-      description: Source-specific format of the post.
-      enum:
-      - instagramReels
-      - instagramStories
-      - pinterestStoryPins
-      - youTubeShorts
-      - facebookReels
-      - facebookStories
-      - tikTokPhoto
-      - twitterNote
-      - youTubeLive
-      - facebookLive
-      - twitchLive
-      - twitterCommunityNote
-    PostType:
-      type: string
-      enum:
-      - post
-      - repost
-      - extendedRepost
-      - comment
     Category:
       type: object
       properties:
@@ -758,6 +585,31 @@ components:
           description: Configured (or, in mention responses, assigned) subcategories.
           items:
             $ref: '#/components/schemas/SubCategory'
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
+    SourceTypeFilter:
+      type: string
+      enum:
+      - blog
+      - forum
+      - news
+      - social
+      - reviews
+      - messenger
+    Sentiment:
+      type: string
+      enum:
+      - positive
+      - neutral
+      - negative
+      - undefined
     Mention:
       type: object
       properties:
@@ -1048,6 +900,59 @@ components:
           items:
             $ref: '#/components/schemas/Category'
           description: List of assigned categories grouped with assigned subcategories.
+    Reactions:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of reactions.
+        angry:
+          type:
+          - integer
+          - 'null'
+        haha:
+          type:
+          - integer
+          - 'null'
+        love:
+          type:
+          - integer
+          - 'null'
+        sad:
+          type:
+          - integer
+          - 'null'
+        wow:
+          type:
+          - integer
+          - 'null'
+        care:
+          type:
+          - integer
+          - 'null'
+    PostType:
+      type: string
+      enum:
+      - post
+      - repost
+      - extendedRepost
+      - comment
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+      - instagramReels
+      - instagramStories
+      - pinterestStoryPins
+      - youTubeShorts
+      - facebookReels
+      - facebookStories
+      - tikTokPhoto
+      - twitterNote
+      - youTubeLive
+      - facebookLive
+      - twitchLive
+      - twitterCommunityNote
     MentionEngagement:
       type: object
       properties:
@@ -1098,24 +1003,119 @@ components:
           - 'null'
           format: date-time
           description: When the engagement data was last collected.
-    SourceTypeFilter:
-      type: string
-      enum:
-      - blog
-      - forum
-      - news
-      - social
-      - reviews
-      - messenger
+    MentionProfile:
+      type: object
+      properties:
+        profileId:
+          type:
+          - string
+          - 'null'
+          description: Profile ID in the source system.
+        url:
+          type:
+          - string
+          - 'null'
+          description: Link to the profile.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Display name.
+        nickname:
+          type:
+          - string
+          - 'null'
+          description: Username/handle.
+        bio:
+          type:
+          - string
+          - 'null'
+          description: Profile description. Available for authors only.
+        avatarUrl:
+          type:
+          - string
+          - 'null'
+          description: URL to the avatar image.
+        subscribers:
+          type:
+          - integer
+          - 'null'
+          description: Number of friends and/or followers.
+        gender:
+          type: string
+          enum:
+          - unknown
+          - community
+          - male
+          - female
+        age:
+          type:
+          - integer
+          - 'null'
+          description: Author age. Available for authors only.
+        jobs:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Author job categories. Requires the Audience Insights addon.
+        interests:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Author interests. Requires the Audience Insights addon.
+        interestCategories:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Author interest categories. Requires the Audience Insights addon.
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
   responses:
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            message: Theme not found
+            message: THEME_PERMISSION_DENIED
     ValidationError:
       description: The request is invalid.
       content:
@@ -1131,14 +1131,14 @@ components:
               message: '''TextQuery'' should not be empty.'
     Unauthorized:
       description: The API key is missing or invalid.
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            message: THEME_PERMISSION_DENIED
+            message: Theme not found
   parameters:
     TopicId:
       name: topicId

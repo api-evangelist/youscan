@@ -870,67 +870,6 @@ components:
         type: array
         items:
           $ref: '#/components/schemas/SourceTypeFilter'
-    StatisticsSources:
-      name: sources
-      in: query
-      description: Filter mentions by source. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: string
-      example:
-      - telegram.me
-      - youscan.io
-    StatisticsExcludeCountry:
-      name: excludeCountry
-      in: query
-      description: Exclude mentions by ISO alpha-2 country codes. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: string
-    StatisticsExcludeTag:
-      name: excludeTag
-      in: query
-      description: Exclude mentions by tag IDs. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: integer
-    StatisticsTags:
-      name: tags
-      in: query
-      description: Filter mentions by tag IDs. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: integer
-    StatisticsExcludeSourceTypes:
-      name: excludeSourceTypes
-      in: query
-      description: Exclude mentions by source type. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          $ref: '#/components/schemas/SourceTypeFilter'
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
-    StatisticsCountry:
-      name: country
-      in: query
-      description: Filter mentions by ISO alpha-2 country codes. Multiple values are supported.
-      schema:
-        type: array
-        items:
-          type: string
-      example:
-      - us
-      - ua
     StatisticsExcludeSources:
       name: excludeSources
       in: query
@@ -949,6 +888,14 @@ components:
         type: string
         format: date
         example: '2024-01-01'
+    StatisticsTags:
+      name: tags
+      in: query
+      description: Filter mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: integer
     StatisticsTo:
       name: to
       in: query
@@ -959,16 +906,60 @@ components:
         type: string
         format: date
         example: '2024-12-31'
-  schemas:
-    NameCount:
-      type: object
-      properties:
-        name:
+    StatisticsCountry:
+      name: country
+      in: query
+      description: Filter mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
           type: string
-          description: Name of the bucket.
-        count:
+      example:
+      - us
+      - ua
+    StatisticsExcludeTag:
+      name: excludeTag
+      in: query
+      description: Exclude mentions by tag IDs. Multiple values are supported.
+      schema:
+        type: array
+        items:
           type: integer
-          description: Number of mentions in the bucket.
+    StatisticsExcludeCountry:
+      name: excludeCountry
+      in: query
+      description: Exclude mentions by ISO alpha-2 country codes. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+    StatisticsSources:
+      name: sources
+      in: query
+      description: Filter mentions by source. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          type: string
+      example:
+      - telegram.me
+      - youscan.io
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
+      schema:
+        type: integer
+    StatisticsExcludeSourceTypes:
+      name: excludeSourceTypes
+      in: query
+      description: Exclude mentions by source type. Multiple values are supported.
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/SourceTypeFilter'
+  schemas:
     TermWithSentiments:
       type: object
       properties:
@@ -981,25 +972,24 @@ components:
           description: Distribution by sentiment.
           items:
             $ref: '#/components/schemas/NameCount'
-    ValidationError:
+    NameCount:
       type: object
       properties:
-        errorCode:
+        name:
           type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
+          description: Name of the bucket.
+        count:
+          type: integer
+          description: Number of mentions in the bucket.
+    SourceTypeFilter:
+      type: string
+      enum:
+      - blog
+      - forum
+      - news
+      - social
+      - reviews
+      - messenger
     LinkItem:
       type: object
       properties:
@@ -1034,18 +1024,26 @@ components:
                     type: integer
             otherCount:
               type: integer
-    SourceTypeFilter:
-      type: string
-      enum:
-      - blog
-      - forum
-      - news
-      - social
-      - reviews
-      - messenger
+    ValidationError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
   responses:
-    Unauthorized:
-      description: The API key is missing or invalid.
     ValidationError:
       description: The request is invalid.
       content:
@@ -1059,6 +1057,8 @@ components:
             - field: TextQuery
               errorCode: notempty_error
               message: '''TextQuery'' should not be empty.'
+    Unauthorized:
+      description: The API key is missing or invalid.
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

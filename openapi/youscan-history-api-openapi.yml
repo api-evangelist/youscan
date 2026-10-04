@@ -234,16 +234,14 @@ components:
 
             '
   responses:
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            message: Theme not found
-    Unauthorized:
-      description: The API key is missing or invalid.
+            message: THEME_PERMISSION_DENIED
     ValidationError:
       description: The request is invalid.
       content:
@@ -257,14 +255,16 @@ components:
             - field: TextQuery
               errorCode: notempty_error
               message: '''TextQuery'' should not be empty.'
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
+    Unauthorized:
+      description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            message: THEME_PERMISSION_DENIED
+            message: Theme not found
   parameters:
     TopicId:
       name: topicId
