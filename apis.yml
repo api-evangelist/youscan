@@ -553,6 +553,9 @@ apis:
   - type: APIReference
     url: https://developers.youscan.io/api/
 common:
+- type: CapabilityMap
+  url: capabilities/youscan-capability-edges.yml
+  name: YouScan Business Capability Map
 - type: TrustCenter
   url: security/youscan-trust-center.yml
 - type: Overlay

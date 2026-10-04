@@ -1,0 +1,37 @@
+slug: youscan
+provider: YouScan
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Software & Technology
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 2
+edges:
+- tag: Mentions
+  spec_file: youscan-mentions-api-openapi.yml
+  capability_id: BC-400.30
+  capability_id_l1: BC-400
+  capability_name: Market Intelligence Management
+  confidence: 0.78
+  evidence: 'GET /topics/{topicId}/mentions  listMentions  List mentions; schemas: Sentiment, MentionEngagement,
+    MentionProfile — "mentions ... collected by the YouScan social media listening platform"'
+  reason: 'Operations retrieve social-media mentions with sentiment and engagement metadata — this is
+    social listening feeding brand/market and customer insight, i.e. Market Intelligence Management. Not
+    customer service or CRM: there is no case or customer record here.'
+- tag: Statistics
+  spec_file: youscan-statistics-api-openapi.yml
+  capability_id: BC-400.30
+  capability_id_l1: BC-400
+  capability_name: Market Intelligence Management
+  confidence: 0.78
+  evidence: GET /topics/{topicId}/statistics/sentiments  Sentiment; GET .../statistics/words  Word cloud;
+    GET .../statistics/genders  Genders; GET .../statistics/regions-sources-sentiments
+  reason: Aggregated sentiment, word-cloud, geography and audience-demographic analytics over social listening
+    data constitute market research / consumer insight reporting, mapping to Market Intelligence Management
+    rather than generic BI.
