@@ -277,6 +277,36 @@ components:
         age:
           type: integer
           description: Author age. Sent only for accounts with the extended webhook feature enabled.
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+      - instagramReels
+      - instagramStories
+      - pinterestStoryPins
+      - youTubeShorts
+      - facebookReels
+      - facebookStories
+      - tikTokPhoto
+      - twitterNote
+      - youTubeLive
+      - facebookLive
+      - twitchLive
+      - twitterCommunityNote
+    PostType:
+      type: string
+      enum:
+      - post
+      - repost
+      - extendedRepost
+      - comment
+    Sentiment:
+      type: string
+      enum:
+      - positive
+      - neutral
+      - negative
+      - undefined
     Reactions:
       type: object
       properties:
@@ -307,36 +337,6 @@ components:
           type:
           - integer
           - 'null'
-    PostType:
-      type: string
-      enum:
-      - post
-      - repost
-      - extendedRepost
-      - comment
-    SourceSpecificFormat:
-      type: string
-      description: Source-specific format of the post.
-      enum:
-      - instagramReels
-      - instagramStories
-      - pinterestStoryPins
-      - youTubeShorts
-      - facebookReels
-      - facebookStories
-      - tikTokPhoto
-      - twitterNote
-      - youTubeLive
-      - facebookLive
-      - twitchLive
-      - twitterCommunityNote
-    Sentiment:
-      type: string
-      enum:
-      - positive
-      - neutral
-      - negative
-      - undefined
   securitySchemes:
     ApiKeyHeader:
       type: apiKey

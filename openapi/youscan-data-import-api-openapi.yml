@@ -370,52 +370,26 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 components:
-  responses:
-    ValidationError:
-      description: The request is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            errorCode: VALIDATION_ERROR
-            message: '''TextQuery'' should not be empty.'
-            errors:
-            - field: TextQuery
-              errorCode: notempty_error
-              message: '''TextQuery'' should not be empty.'
-    Unauthorized:
-      description: The API key is missing or invalid.
-    TopicNotFound:
-      description: Topic not found or you don't have access to it.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: Theme not found
   schemas:
-    ImportEngagement:
+    ValidationError:
       type: object
       properties:
-        likes:
-          type: integer
-        comments:
-          type: integer
-        shares:
-          type: integer
-        views:
-          type: integer
-        reactions:
-          type: integer
-          description: Total reactions.
-        reach:
-          type: integer
-          description: Potential reach.
-        impressions:
-          type: integer
-        saves:
-          type: integer
+        errorCode:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
     ImportMention:
       type: object
       required:
@@ -532,18 +506,6 @@ components:
         language:
           type: string
           description: Language code (e.g. "eng").
-    ImportGeo:
-      type: object
-      properties:
-        countryCode:
-          type: string
-          description: ISO 2-letter country code (e.g. "US").
-        country:
-          type: string
-          description: Country name.
-        city:
-          type: string
-          description: City name.
     ImportProfile:
       type: object
       properties:
@@ -580,6 +542,41 @@ components:
           description: Verification status.
         geo:
           $ref: '#/components/schemas/ImportGeo'
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    ImportEngagement:
+      type: object
+      properties:
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        views:
+          type: integer
+        reactions:
+          type: integer
+          description: Total reactions.
+        reach:
+          type: integer
+          description: Potential reach.
+        impressions:
+          type: integer
+        saves:
+          type: integer
     ImportStatus:
       type: object
       properties:
@@ -646,25 +643,18 @@ components:
         canShowMentions:
           type: boolean
           description: Whether the imported mentions can be viewed in the topic.
-    ValidationError:
+    ImportGeo:
       type: object
       properties:
-        errorCode:
+        countryCode:
           type: string
-          const: VALIDATION_ERROR
-        message:
+          description: ISO 2-letter country code (e.g. "US").
+        country:
           type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
+          description: Country name.
+        city:
+          type: string
+          description: City name.
     ImportError:
       type: object
       properties:
@@ -686,33 +676,43 @@ components:
           type: string
           format: date-time
           description: Error timestamp (ISO 8601).
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
+  responses:
+    ValidationError:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errorCode: VALIDATION_ERROR
+            message: '''TextQuery'' should not be empty.'
+            errors:
+            - field: TextQuery
+              errorCode: notempty_error
+              message: '''TextQuery'' should not be empty.'
+    Unauthorized:
+      description: The API key is missing or invalid.
+    TopicNotFound:
+      description: Topic not found or you don't have access to it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Theme not found
   parameters:
-    TopicId:
-      name: topicId
-      in: path
-      required: true
-      description: ID of the Topic.
-      schema:
-        type: integer
     ImportId:
       name: importId
       in: path
       required: true
       description: ID of the Import.
+      schema:
+        type: integer
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      description: ID of the Topic.
       schema:
         type: integer
   securitySchemes:

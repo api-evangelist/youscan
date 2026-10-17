@@ -93,20 +93,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
-    Category:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Category ID.
-        name:
-          type: string
-          description: Category name.
-        subCategories:
-          type: array
-          description: Configured (or, in mention responses, assigned) subcategories.
-          items:
-            $ref: '#/components/schemas/SubCategory'
     SubCategory:
       type: object
       properties:
@@ -130,6 +116,20 @@ components:
           description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
 
             '
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Category ID.
+        name:
+          type: string
+          description: Category name.
+        subCategories:
+          type: array
+          description: Configured (or, in mention responses, assigned) subcategories.
+          items:
+            $ref: '#/components/schemas/SubCategory'
     Space:
       type: object
       properties:

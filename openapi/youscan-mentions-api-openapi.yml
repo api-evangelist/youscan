@@ -571,6 +571,15 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subcategory ID.
+        name:
+          type: string
+          description: Subcategory name.
     Category:
       type: object
       properties:
@@ -585,15 +594,160 @@ components:
           description: Configured (or, in mention responses, assigned) subcategories.
           items:
             $ref: '#/components/schemas/SubCategory'
-    SubCategory:
+    ValidationError:
       type: object
       properties:
-        id:
-          type: integer
-          description: Subcategory ID.
-        name:
+        errorCode:
           type: string
-          description: Subcategory name.
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              errorCode:
+                type: string
+              message:
+                type: string
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+        resourceType:
+          type: string
+          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
+
+            '
+    MentionEngagement:
+      type: object
+      properties:
+        likes:
+          type:
+          - integer
+          - 'null'
+        dislikes:
+          type:
+          - integer
+          - 'null'
+        comments:
+          type:
+          - integer
+          - 'null'
+        reposts:
+          type:
+          - integer
+          - 'null'
+        views:
+          type:
+          - integer
+          - 'null'
+        reach:
+          type:
+          - integer
+          - 'null'
+        saves:
+          type:
+          - integer
+          - 'null'
+        impressions:
+          type:
+          - integer
+          - 'null'
+        engagement:
+          type:
+          - integer
+          - 'null'
+          description: Sum of likes, dislikes, comments and reposts.
+        reactions:
+          oneOf:
+          - $ref: '#/components/schemas/Reactions'
+          - type: 'null'
+        dateCollected:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: When the engagement data was last collected.
+    MentionProfile:
+      type: object
+      properties:
+        profileId:
+          type:
+          - string
+          - 'null'
+          description: Profile ID in the source system.
+        url:
+          type:
+          - string
+          - 'null'
+          description: Link to the profile.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Display name.
+        nickname:
+          type:
+          - string
+          - 'null'
+          description: Username/handle.
+        bio:
+          type:
+          - string
+          - 'null'
+          description: Profile description. Available for authors only.
+        avatarUrl:
+          type:
+          - string
+          - 'null'
+          description: URL to the avatar image.
+        subscribers:
+          type:
+          - integer
+          - 'null'
+          description: Number of friends and/or followers.
+        gender:
+          type: string
+          enum:
+          - unknown
+          - community
+          - male
+          - female
+        age:
+          type:
+          - integer
+          - 'null'
+          description: Author age. Available for authors only.
+        jobs:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Author job categories. Requires the Audience Insights addon.
+        interests:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Author interests. Requires the Audience Insights addon.
+        interestCategories:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Author interest categories. Requires the Audience Insights addon.
     SourceTypeFilter:
       type: string
       enum:
@@ -603,13 +757,6 @@ components:
       - social
       - reviews
       - messenger
-    Sentiment:
-      type: string
-      enum:
-      - positive
-      - neutral
-      - negative
-      - undefined
     Mention:
       type: object
       properties:
@@ -900,6 +1047,36 @@ components:
           items:
             $ref: '#/components/schemas/Category'
           description: List of assigned categories grouped with assigned subcategories.
+    SourceSpecificFormat:
+      type: string
+      description: Source-specific format of the post.
+      enum:
+      - instagramReels
+      - instagramStories
+      - pinterestStoryPins
+      - youTubeShorts
+      - facebookReels
+      - facebookStories
+      - tikTokPhoto
+      - twitterNote
+      - youTubeLive
+      - facebookLive
+      - twitchLive
+      - twitterCommunityNote
+    PostType:
+      type: string
+      enum:
+      - post
+      - repost
+      - extendedRepost
+      - comment
+    Sentiment:
+      type: string
+      enum:
+      - positive
+      - neutral
+      - negative
+      - undefined
     Reactions:
       type: object
       properties:
@@ -930,192 +1107,7 @@ components:
           type:
           - integer
           - 'null'
-    PostType:
-      type: string
-      enum:
-      - post
-      - repost
-      - extendedRepost
-      - comment
-    SourceSpecificFormat:
-      type: string
-      description: Source-specific format of the post.
-      enum:
-      - instagramReels
-      - instagramStories
-      - pinterestStoryPins
-      - youTubeShorts
-      - facebookReels
-      - facebookStories
-      - tikTokPhoto
-      - twitterNote
-      - youTubeLive
-      - facebookLive
-      - twitchLive
-      - twitterCommunityNote
-    MentionEngagement:
-      type: object
-      properties:
-        likes:
-          type:
-          - integer
-          - 'null'
-        dislikes:
-          type:
-          - integer
-          - 'null'
-        comments:
-          type:
-          - integer
-          - 'null'
-        reposts:
-          type:
-          - integer
-          - 'null'
-        views:
-          type:
-          - integer
-          - 'null'
-        reach:
-          type:
-          - integer
-          - 'null'
-        saves:
-          type:
-          - integer
-          - 'null'
-        impressions:
-          type:
-          - integer
-          - 'null'
-        engagement:
-          type:
-          - integer
-          - 'null'
-          description: Sum of likes, dislikes, comments and reposts.
-        reactions:
-          oneOf:
-          - $ref: '#/components/schemas/Reactions'
-          - type: 'null'
-        dateCollected:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: When the engagement data was last collected.
-    MentionProfile:
-      type: object
-      properties:
-        profileId:
-          type:
-          - string
-          - 'null'
-          description: Profile ID in the source system.
-        url:
-          type:
-          - string
-          - 'null'
-          description: Link to the profile.
-        name:
-          type:
-          - string
-          - 'null'
-          description: Display name.
-        nickname:
-          type:
-          - string
-          - 'null'
-          description: Username/handle.
-        bio:
-          type:
-          - string
-          - 'null'
-          description: Profile description. Available for authors only.
-        avatarUrl:
-          type:
-          - string
-          - 'null'
-          description: URL to the avatar image.
-        subscribers:
-          type:
-          - integer
-          - 'null'
-          description: Number of friends and/or followers.
-        gender:
-          type: string
-          enum:
-          - unknown
-          - community
-          - male
-          - female
-        age:
-          type:
-          - integer
-          - 'null'
-          description: Author age. Available for authors only.
-        jobs:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Author job categories. Requires the Audience Insights addon.
-        interests:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Author interests. Requires the Audience Insights addon.
-        interestCategories:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: Author interest categories. Requires the Audience Insights addon.
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: Machine-readable error code.
-        message:
-          type: string
-          description: Human-readable error description.
-        resourceType:
-          type: string
-          description: 'Present on `RESOURCE_NOT_FOUND` errors — the type of the missing resource (e.g. "Import", "Space").
-
-            '
-    ValidationError:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          const: VALIDATION_ERROR
-        message:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              errorCode:
-                type: string
-              message:
-                type: string
   responses:
-    Forbidden:
-      description: Your permission level for this topic is too low for the action.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            message: THEME_PERMISSION_DENIED
     ValidationError:
       description: The request is invalid.
       content:
@@ -1129,6 +1121,14 @@ components:
             - field: TextQuery
               errorCode: notempty_error
               message: '''TextQuery'' should not be empty.'
+    Forbidden:
+      description: Your permission level for this topic is too low for the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: THEME_PERMISSION_DENIED
     Unauthorized:
       description: The API key is missing or invalid.
     TopicNotFound:
