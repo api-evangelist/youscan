@@ -29,3 +29,16 @@
   relationship: platform-app
   status: not-a-workflow
   arazzo: null
+- slug: youscan-zendesk-own
+  label: Zendesk (own)
+  partner: zendesk
+  partner_name: Zendesk (own)
+  category: Knowledge and Content Management
+  type: marketplace
+  marketplace: own
+  channel: partner-built
+  evidence: https://www.zendesk.com/marketplace/apps/support/186068/youscan/
+  source: edge
+  relationship: platform-app
+  status: not-a-workflow
+  arazzo: null
